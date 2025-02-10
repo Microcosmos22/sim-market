@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Tabs, Tab } from '@mui/material';
 import { motion } from 'framer-motion';
 import { FaTachometerAlt, FaDatabase, FaCogs, FaChartLine, FaRunning, FaBars, FaClipboardList, FaTimes } from 'react-icons/fa';
+import * as api from "./api"; // Import all API functions
+import Plotly from 'plotly.js-dist';
 
 const App = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -22,8 +24,19 @@ const App = () => {
 
   const addDataset = () => {
     if (!endDate || !intervalLength) return;
-    const unixTime = Math.floor(new Date(endDate).getTime() / 1000);
-    const datasetString = `${candleLength}_${tradingPair}_${unixTime}_${intervalLength}`;
+    let formattedEndDate = endDate + " 00:00:00";
+
+    console.log("Candle Length:", candleLength);
+    console.log("Trading Pair:", tradingPair);
+    console.log("End Date:", endDate);
+    console.log("Interval Length:", intervalLength);
+
+    const response = api.getHistoricalData([formattedEndDate, intervalLength], tradingPair, candleLength)
+    const { data } = response;
+
+
+
+    const datasetString = `${candleLength}_${tradingPair}_${endDate}_${intervalLength}`;
     setDatasets([...datasets, datasetString]);
   };
 
@@ -127,7 +140,6 @@ const App = () => {
                           <option>15min</option>
                           <option>1hour</option>
                           <option>4hour</option>
-                          <option>1day</option>
                         </select>
                         <select className="bg-gray-800 p-2 rounded" value={tradingPair} onChange={(e) => setTradingPair(e.target.value)}>
                           <option>BTCUSD</option>
