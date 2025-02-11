@@ -3,6 +3,7 @@ import { Tabs, Tab } from '@mui/material';
 import { motion } from 'framer-motion';
 import { FaTachometerAlt, FaDatabase, FaCogs, FaChartLine, FaRunning, FaBars, FaClipboardList, FaTimes } from 'react-icons/fa';
 import * as api from "./api"; // Import all API functions
+import BottomPanel from "./BottomPanel";
 import Plotly from 'plotly.js-dist';
 
 const App = () => {
@@ -18,7 +19,7 @@ const App = () => {
   const [isSaving, setIsSaving] = useState(false); // To manage the training state
   const [intervalLength, setIntervalLength] = useState(3000); // Default value is 10
 
-  const [epochs, setEpochs] = useState(300); // To hold the log data
+  const [epochs, setEpochs] = useState(100); // To hold the log data
   const [lookf, setlookf] = useState(1); // To hold the log data
   const [lookb, setlookb] = useState(10);
   const [dropout, setDropout] = useState(0.2);
@@ -27,6 +28,8 @@ const App = () => {
   const [layer2, setLayer2] = useState(15);
   const [batchsize, setBatchsize] = useState(64);
   const [max_tot_return, setMax_tot_return] = useState(0.3);
+
+  const [response, setResponse] = useState({ error: [], val: [] });
 
 
   const handleTabChange = (event, newValue) => {
@@ -46,17 +49,9 @@ const App = () => {
     if (!endDate || !intervalLength) return;
     let formattedEndDate = endDate + " 00:00:00";
 
-    console.log("Candle Length:", candleLength);
-    console.log("Trading Pair:", tradingPair);
-    console.log("End Date:", endDate);
-    console.log("Interval Length:", intervalLength);
-
     try {
       const response = await api.getHistoricalData([formattedEndDate, intervalLength], tradingPair, candleLength);
-
       const { timestamps, data } = response;
-
-      console.log(data);
 
       // data as """ (time, open, high, low, close, volume, close_time etc.) """
       const time = data.map(item => item[0]); // Convert timestamps to Date objects
@@ -65,52 +60,41 @@ const App = () => {
       const low = data.map(item => item[3]);
       const close = data.map(item => item[4]);
 
-      // Limit the data to the first 10 candles
-      //console.log(time.slice(0, 10));
-      console.log("open");
-      console.log(open.slice(0, 10));
-      console.log("high");
-      console.log(high.slice(0, 10));
-      console.log("low");
-      console.log(low.slice(0, 10));
-      console.log("close");
-      console.log(close.slice(0, 10));
 
-
-      // Plot with Plotly
       const candlestickTrace = {
-        x: time,
-        open: open,
-        high: high,
-        low: low,
-        close: close,
-        type: 'candlestick',
-        name: tradingPair
-      };
+        x: time, open: open, high: high,
+        low: low, close: close,type: 'candlestick', name: tradingPair};
 
       const layout = {
         title: `${tradingPair} Candlestick Chart`,
         xaxis: { type: 'date', title: 'Time' },
-        yaxis: {
-        title: 'Price',
-        autorange: true, // This will adjust the Y-axis to the data automatically
-      },
-        plot_bgcolor: '#2D3748', // Same background as upper panel
-        paper_bgcolor: '#2D3748', // Same background as upper panel
-        font: { color: 'white' }
-      };
+        yaxis: {title: 'Price',autorange: true},
+        plot_bgcolor: '#2D3748',
+        paper_bgcolor: '#2D3748',
+        font: { color: 'white' }};
 
       Plotly.newPlot("candlestickChart", [candlestickTrace], layout);
-
-      // Add dataset string to list
       const datasetString = `${candleLength}_${tradingPair}_${endDate}_${intervalLength}`;
       setDatasets([...datasets, datasetString]);
 
     } catch (error) {
       console.error("Error fetching historical data:", error);
-    }
-  };
+    }};
 
+
+const handleTrainButtonClick = async () => {
+  setIsTraining(true); // Indicate training is in progress
+  setLogs("Training..."); // Clear previous logs
+
+  try {
+    const response = await api.trainModel(epochs, lookf, lookb, dropout, learn_rate, layer1, layer2, batchsize, max_tot_return);  // Adjust the URL to your backend endpoint
+    setResponse(response);
+  } catch (error) {
+    console.error("Training failed:", error);
+    setLogs("Error: Unable to start training.");
+  } finally {
+    setIsTraining(false); // Indicate training is complete
+  }};
 
   const removeDataset = (index) => {
     setDatasets(datasets.filter((_, i) => i !== index));
@@ -120,24 +104,6 @@ const App = () => {
     const parts = dataset.split("_");
     return sum + parseInt(parts[3], 10);
   }, 0);
-
-
-  const handleTrainButtonClick = async () => {
-  setIsTraining(true); // Indicate training is in progress
-  setLogs("Training..."); // Clear previous logs
-
-  try {
-    const response = await api.trainModel(epochs, lookf, lookb, dropout, learn_rate, layer1, layer2, batchsize, max_tot_return);  // Adjust the URL to your backend endpoint
-
-
-
-  } catch (error) {
-    console.error("Training failed:", error);
-    setLogs("Error: Unable to start training.");
-  } finally {
-    setIsTraining(false); // Indicate training is complete
-  }
-};
 
 const handleSaveMachineClick = async () => {
   console.log("test");
@@ -357,7 +323,10 @@ const handleSaveMachineClick = async () => {
                     )}
                 </div>
               </div>
-              <div className="bg-gray-700 p-4 shadow-lg rounded-lg flex">Bottom Panel - Console Logs</div>
+              {/* Bottom Panel */}
+              <div className="bg-gray-700 p-4 shadow-lg rounded-lg">
+                <BottomPanel response={response || { error: [], val: [] }} />
+              </div>
             </>
           )}
         </div>
