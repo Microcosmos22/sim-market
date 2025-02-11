@@ -9,20 +9,61 @@ const App = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
   const [activeMenu, setActiveMenu] = useState("Training");
-  const [datasets, setDatasets] = useState([]);
   const [candleLength, setCandleLength] = useState("15min");
   const [tradingPair, setTradingPair] = useState("BTCUSD");
   const [endDate, setEndDate] = useState("");
   const [intervalLength, setIntervalLength] = useState("");
   const [logs, setLogs] = useState(""); // To hold the log data
   const [isTraining, setIsTraining] = useState(false); // To manage the training state
-
+  const [datasets, setDatasets] = useState([]);  // Stores dataset names
+  const [datasetResponses, setDatasetResponses] = useState([]); // Stores dataset responses
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
   };
 
-  const addDataset = () => {
+  const handleDatasetClick = (dataset) => {
+    // Find the corresponding dataset response from the stored responses
+    const datasetIndex = datasets.indexOf(dataset);
+    const historicalData = datasetResponses[datasetIndex]; // Retrieve from stored list
+
+    if (historicalData) {
+        const { timestamps, data } = historicalData; // Extract timestamps and candlestick data
+        console.log("Number of candlesticks:", data.length);
+        console.log("Number of features per candlestick:", data[0].length);
+        console.log("First 10 candlesticks:", data.slice(0, 10));
+
+        //""" data: (time, open, high, low, close, volume, close_time etc.) """
+        // Extract candlestick values: open, high, low, close
+        const time = data.map(item => item[0]); // Convert timestamps to Date objects
+        const open = data.map(item => item[1]);  // Open price
+        const high = data.map(item => item[2]);  // High price
+        const low = data.map(item => item[3]);   // Low price
+        const close = data.map(item => item[4]); // Close price
+
+        // Create the candlestick chart trace
+        const trace = {
+            x: time,open: open,high: high,low: low,
+            close: close,type: 'candlestick',name: dataset};
+
+        // Chart layout
+        const layout = {
+            title: `Candlestick Chart for ${dataset}`,
+            xaxis: { title: 'Time' },
+            yaxis: { title: 'Price' },
+            showlegend: true,
+        };
+
+        // Render chart with Plotly
+        Plotly.newPlot('candlestickChart', [trace], layout);
+    } else {
+        console.error("No data available for the selected dataset.");
+    }
+};
+
+
+
+  const addDataset = async () => {
     if (!endDate || !intervalLength) return;
     let formattedEndDate = endDate + " 00:00:00";
 
@@ -31,13 +72,17 @@ const App = () => {
     console.log("End Date:", endDate);
     console.log("Interval Length:", intervalLength);
 
-    const response = api.getHistoricalData([formattedEndDate, intervalLength], tradingPair, candleLength)
-    const { data } = response;
-
-
+    const response = await api.getHistoricalData([formattedEndDate, intervalLength], tradingPair, candleLength);
 
     const datasetString = `${candleLength}_${tradingPair}_${endDate}_${intervalLength}`;
-    setDatasets([...datasets, datasetString]);
+    // Append datasetString to datasets list
+    setDatasets((prevDatasets) => [...prevDatasets, datasetString]);
+
+    // Append response to datasetResponses list
+    setDatasetResponses((prevResponses) => [...prevResponses, response]);
+    console.log("Updated datasets:", datasets);
+    // Plot candlestick chart for the added dataset
+    //await handleDatasetClick(datasetString);
   };
 
   const removeDataset = (index) => {
@@ -49,29 +94,27 @@ const App = () => {
     return sum + parseInt(parts[3], 10);
   }, 0);
 
-
   const handleTrainButtonClick = async () => {
-  setIsTraining(true); // Indicate training is in progress
-  setLogs(""); // Clear previous logs
+    setIsTraining(true); // Indicate training is in progress
+    setLogs(""); // Clear previous logs
 
-  try {
-    // Simulate calling the backend to start the training process
-    const response = await fetch("/api/train", { method: "POST" });  // Adjust the URL to your backend endpoint
-    const data = await response.json();
+    try {
+      // Simulate calling the backend to start the training process
+      const response = await fetch("/api/train", { method: "POST" });  // Adjust the URL to your backend endpoint
+      const data = await response.json();
 
-    // Assuming backend sends logs as a response in chunks or events
-    if (data && data.logs) {
-      // Update logs from the backend (could be updated in real-time)
-      setLogs((prevLogs) => prevLogs + "\n" + data.logs);
+      // Assuming backend sends logs as a response in chunks or events
+      if (data && data.logs) {
+        // Update logs from the backend (could be updated in real-time)
+        setLogs((prevLogs) => prevLogs + "\n" + data.logs);
+      }
+    } catch (error) {
+      console.error("Training failed:", error);
+      setLogs("Error: Unable to start training.");
+    } finally {
+      setIsTraining(false); // Indicate training is complete
     }
-  } catch (error) {
-    console.error("Training failed:", error);
-    setLogs("Error: Unable to start training.");
-  } finally {
-    setIsTraining(false); // Indicate training is complete
-  }
-};
-
+  };
 
   return (
     <div className="h-screen bg-black text-white flex flex-col overflow-y-auto">
@@ -116,58 +159,53 @@ const App = () => {
 
         {/* Main Panels */}
         <div className="flex-1 flex flex-col gap-4 p-4 overflow-y-auto">
-          {activeMenu === "Training" && (
-            <>
-              <div className="bg-gray-700 p-4 shadow-lg rounded-lg flex">Top Panel - Live Plot</div>
-              <div className="bg-gray-700 p-4 shadow-lg rounded-lg flex flex-col">
-                <Tabs
-                  value={activeTab}
-                  onChange={handleTabChange}
-                  textColor="inherit"
-                  TabIndicatorProps={{ style: { background: 'yellow' } }}
-                  className="mb-4"
+              {activeMenu === "Training" && (
+                <>
+          <div className="bg-gray-700 p-4 shadow-lg rounded-lg flex">Top Panel - Live Plot
+
+          </div>
+          <div className="bg-gray-700 p-4 shadow-lg rounded-lg flex flex-col">
+              <Tabs
+                value={activeTab}
+                onChange={handleTabChange}
+                textColor="inherit"
+                TabIndicatorProps={{ style: { background: 'yellow' } }}
+                className="mb-4"
                 >
-                  <Tab label="Datasets" />
-                  <Tab label="Pre-processing" />
-                  <Tab label="Hyperparameters" />
-                  <Tab label="Plots" />
-                </Tabs>
-                <div className="mt-4">
-                  {activeTab === 0 && (
+                <Tab label="Datasets" />
+                <Tab label="Pre-processing" />
+                <Tab label="Hyperparameters" />
+                <Tab label="Plots" />
+              </Tabs>
+            <div className="mt-4">
+                {activeTab === 0 && (
                     <div>
                       <div className="flex gap-4 mb-4">
                         <select className="bg-gray-800 p-2 rounded" value={candleLength} onChange={(e) => setCandleLength(e.target.value)}>
-                          <option>15min</option>
-                          <option>1hour</option>
-                          <option>4hour</option>
+                          <option>15min</option><option>1hour</option><option>4hour</option>
                         </select>
                         <select className="bg-gray-800 p-2 rounded" value={tradingPair} onChange={(e) => setTradingPair(e.target.value)}>
-                          <option>BTCUSD</option>
-                          <option>XRPUSD</option>
-                          <option>ETHUSD</option>
-                          <option>LTCUSD</option>
+                          <option>BTCUSD</option><option>XRPUSD</option><option>ETHUSD</option><option>LTCUSD</option>
                         </select>
                         <input type="date" className="bg-gray-800 p-2 rounded" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
                         <input type="number" placeholder="Interval Length" className="bg-gray-800 p-2 rounded" value={intervalLength} onChange={(e) => setIntervalLength(e.target.value)} />
                         <button onClick={addDataset} className="bg-yellow-500 p-2 rounded">Add</button>
                       </div>
                       <div className="flex justify-between items-center mb-2">
-                        <h2 className="text-lg font-bold">Selected Datasets</h2>
-                        <span className="text-yellow-400">Total Candles: {totalCandles}</span>
+                        <h2 className="text-lg font-semibold">Datasets</h2>
+                        <div>{totalCandles} Candles</div>
                       </div>
-                      <div className="bg-gray-900 p-4 rounded overflow-y-auto max-h-40">
+                      <div className="flex flex-wrap gap-2">
                         {datasets.map((dataset, index) => (
-                          <div key={index} className="p-2 border-b border-gray-700 flex justify-between items-center">
-                            <span>{dataset}</span>
-                            <button onClick={() => removeDataset(index)} className="text-red-500 hover:text-red-700">
-                              <FaTimes />
-                            </button>
+                          <div key={index} className="bg-gray-800 p-2 rounded cursor-pointer" onClick={() => handleDatasetClick(dataset)}>
+                            {dataset}
+                            <FaTimes className="ml-2 text-red-500 cursor-pointer" onClick={() => removeDataset(index)} />
                           </div>
                         ))}
                       </div>
+                      <div id="candlestickChart" className="mt-4" style={{ width: '100%', height: '500px' }}></div>
                     </div>
-                  )}
-                  {activeTab === 1 && (
+                  )}{activeTab === 1 && (
                       <div className="grid grid-cols-3 gap-4 border-r border-gray-600">
                         {/* Column 1 */}
                         <div className="p-4">
@@ -282,7 +320,6 @@ const App = () => {
                     )}
                 </div>
               </div>
-              <div className="bg-gray-700 p-4 shadow-lg rounded-lg flex">Bottom Panel - Console Logs</div>
             </>
           )}
         </div>
