@@ -10,17 +10,36 @@ const App = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [activeMenu, setActiveMenu] = useState("Training");
   const [datasets, setDatasets] = useState([]);
-  const [candleLength, setCandleLength] = useState("15min");
+  const [candleLength, setCandleLength] = useState("1hour");
   const [tradingPair, setTradingPair] = useState("BTCUSD");
-  const [endDate, setEndDate] = useState("");
-  const [intervalLength, setIntervalLength] = useState("");
+  const [endDate, setEndDate] = useState(getTodayDate());
   const [logs, setLogs] = useState(""); // To hold the log data
   const [isTraining, setIsTraining] = useState(false); // To manage the training state
+  const [isSaving, setIsSaving] = useState(false); // To manage the training state
+  const [intervalLength, setIntervalLength] = useState(3000); // Default value is 10
+
+  const [epochs, setEpochs] = useState(300); // To hold the log data
+  const [lookf, setlookf] = useState(1); // To hold the log data
+  const [lookb, setlookb] = useState(10);
+  const [dropout, setDropout] = useState(0.2);
+  const [learn_rate, setLearnRate] = useState(0.1);
+  const [layer1, setLayer1] = useState(20);
+  const [layer2, setLayer2] = useState(15);
+  const [batchsize, setBatchsize] = useState(64);
+  const [max_tot_return, setMax_tot_return] = useState(0.3);
 
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
   };
+
+  function getTodayDate() {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+    const dd = String(today.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
 
 
   const addDataset = async () => {
@@ -72,7 +91,10 @@ const App = () => {
       const layout = {
         title: `${tradingPair} Candlestick Chart`,
         xaxis: { type: 'date', title: 'Time' },
-        yaxis: { title: 'Price' },
+        yaxis: {
+        title: 'Price',
+        autorange: true, // This will adjust the Y-axis to the data automatically
+      },
         plot_bgcolor: '#2D3748', // Same background as upper panel
         paper_bgcolor: '#2D3748', // Same background as upper panel
         font: { color: 'white' }
@@ -102,24 +124,23 @@ const App = () => {
 
   const handleTrainButtonClick = async () => {
   setIsTraining(true); // Indicate training is in progress
-  setLogs(""); // Clear previous logs
+  setLogs("Training..."); // Clear previous logs
 
   try {
-    // Simulate calling the backend to start the training process
-    const response = await fetch("/api/train", { method: "POST" });  // Adjust the URL to your backend endpoint
-    const data = await response.json();
+    const response = await api.trainModel(epochs, lookf, lookb, dropout, learn_rate, layer1, layer2, batchsize, max_tot_return);  // Adjust the URL to your backend endpoint
 
-    // Assuming backend sends logs as a response in chunks or events
-    if (data && data.logs) {
-      // Update logs from the backend (could be updated in real-time)
-      setLogs((prevLogs) => prevLogs + "\n" + data.logs);
-    }
+
+
   } catch (error) {
     console.error("Training failed:", error);
     setLogs("Error: Unable to start training.");
   } finally {
     setIsTraining(false); // Indicate training is complete
   }
+};
+
+const handleSaveMachineClick = async () => {
+  console.log("test");
 };
 
 
@@ -186,7 +207,7 @@ const App = () => {
                   <Tab label="Datasets" />
                   <Tab label="Pre-processing" />
                   <Tab label="Hyperparameters" />
-                  <Tab label="Plots" />
+                  <Tab label="Training" />
                 </Tabs>
                 <div className="mt-4">
                   {activeTab === 0 && (
@@ -231,11 +252,11 @@ const App = () => {
                           <div className="mt-4 flex space-x-4"> {/* Flex container for X and Y inputs */}
                             <div>
                               <label htmlFor="x-input" className="block">Lookback (X):</label>
-                              <input id="x-input" type="number" defaultValue={10} className="bg-gray-800 mt-1 p-2 rounded w-full" />
+                              <input id="x-input" type="number" value={lookb} className="bg-gray-800 mt-1 p-2 rounded w-full" />
                             </div>
                             <div>
                               <label htmlFor="y-input" className="block">Lookforward (Y):</label>
-                              <input id="y-input" type="number" defaultValue={1} className="bg-gray-800 mt-1 p-2 rounded w-full" />
+                              <input id="y-input" type="number" value={lookf} className="bg-gray-800 mt-1 p-2 rounded w-full" />
                             </div>
                           </div>
 
@@ -249,23 +270,14 @@ const App = () => {
                           <div className="mt-4 flex space-x-4"> {/* Flex container for Return Mean and Return Interval */}
                             <div className="flex-1">
                               <div className="flex items-center justify-between">
-                                <label htmlFor="return-mean" className="block">Return Mean:</label>
+                                <label htmlFor="return-mean" className="block">Max. interval return:</label>
                                 <a href="/help" target="_blank" className="ml-2 text-blue-500 hover:underline">
                                   <span className="text-xl">?</span>
                                 </a>
                               </div>
-                              <input id="return-mean" type="number" className="bg-gray-800 mt-1 p-2 rounded w-full" />
-                            </div>
+                              <input id="return-mean" type="number" className="bg-gray-800 mt-1 p-2 rounded w-full" value={max_tot_return} /></div>
 
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between">
-                                <label htmlFor="return-interval" className="block">Return Interval:</label>
-                                <a href="/help" target="_blank" className="ml-2 text-blue-500 hover:underline">
-                                  <span className="text-xl">?</span>
-                                </a>
-                              </div>
-                              <input id="return-interval" type="number" className="bg-gray-800 mt-1 p-2 rounded w-full" />
-                            </div>
+
                           </div>
                           <div>Samples after filtering: {1000}</div>
                         </div>
@@ -282,31 +294,31 @@ const App = () => {
                         {/* Layer 1 Input */}
                         <div>
                           <label htmlFor="layer1" className="block">Layer 1:</label>
-                          <input id="layer1" type="number" defaultValue={20} type="number" className="bg-gray-800 mt-1 p-2 rounded w-full" />
+                          <input id="layer1" type="number" value={layer1} type="number" className="bg-gray-800 mt-1 p-2 rounded w-full" />
                         </div>
 
                         {/* Layer 2 Input */}
                         <div>
                           <label htmlFor="layer2" className="block">Layer 2:</label>
-                          <input id="layer2" type="number" defaultValue={15} type="number" className="bg-gray-800 mt-1 p-2 rounded w-full"  />
+                          <input id="layer2" type="number" value={layer2} type="number" className="bg-gray-800 mt-1 p-2 rounded w-full"  />
                         </div>
 
                         {/* Dropout Input */}
                         <div>
                           <label htmlFor="dropout" className="block">Dropout:</label>
-                          <input id="dropout" type="number" defaultValue={0.2} step="0.01" className="bg-gray-800 mt-1 p-2 rounded w-full" />
+                          <input id="dropout" type="number" value={dropout} step="0.01" className="bg-gray-800 mt-1 p-2 rounded w-full" />
                         </div>
 
                         {/* Learning Rate Input */}
                         <div>
                           <label htmlFor="learn-rate" className="block">Learning Rate:</label>
-                          <input id="learn-rate" type="number" defaultValue={0.1} step="0.0001" className="bg-gray-800 mt-1 p-2 rounded w-full"  />
+                          <input id="learn-rate" type="number" value={learn_rate} step="0.0001" className="bg-gray-800 mt-1 p-2 rounded w-full"  />
                         </div>
 
                         {/* N Epochs Input */}
                         <div>
                           <label htmlFor="n-epochs" className="block">N Epochs:</label>
-                          <input id="n-epochs" type="number" defaultValue={300} className="bg-gray-800 mt-1 p-2 rounded w-full"  />
+                          <input id="n-epochs" type="number" value={epochs} className="bg-gray-800 mt-1 p-2 rounded w-full"  />
                         </div>
                       </div>
                     )}
@@ -320,6 +332,14 @@ const App = () => {
                           disabled={isTraining}
                         >
                           {isTraining ? "Training..." : "Train"}
+                        </button>
+
+                        <button
+                          onClick={handleSaveMachineClick}
+                          className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 disabled:bg-gray-300"
+                          disabled={isSaving}
+                        >
+                          {isSaving ? "Saving..." : "Save Machine for Tracking"}
                         </button>
 
                         {/* Log Output */}
