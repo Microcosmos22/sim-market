@@ -6,7 +6,7 @@ import * as api from "./api"; // Import all API functions
 import Plotly from 'plotly.js-dist';
 
 const App = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(true); // Default menu expanded
   const [activeTab, setActiveTab] = useState(0);
   const [activeMenu, setActiveMenu] = useState("Training");
   const [datasets, setDatasets] = useState([]);
@@ -22,7 +22,8 @@ const App = () => {
     setActiveTab(newValue);
   };
 
-  const addDataset = () => {
+
+  const addDataset = async () => {
     if (!endDate || !intervalLength) return;
     let formattedEndDate = endDate + " 00:00:00";
 
@@ -31,14 +32,63 @@ const App = () => {
     console.log("End Date:", endDate);
     console.log("Interval Length:", intervalLength);
 
-    const response = api.getHistoricalData([formattedEndDate, intervalLength], tradingPair, candleLength)
-    const { data } = response;
+    try {
+      const response = await api.getHistoricalData([formattedEndDate, intervalLength], tradingPair, candleLength);
+
+      const { timestamps, data } = response;
+
+      console.log(data);
+
+      // data as """ (time, open, high, low, close, volume, close_time etc.) """
+      const time = data.map(item => item[0]); // Convert timestamps to Date objects
+      const open = data.map(item => item[1]);
+      const high = data.map(item => item[2]);
+      const low = data.map(item => item[3]);
+      const close = data.map(item => item[4]);
+
+      // Limit the data to the first 10 candles
+      //console.log(time.slice(0, 10));
+      console.log("open");
+      console.log(open.slice(0, 10));
+      console.log("high");
+      console.log(high.slice(0, 10));
+      console.log("low");
+      console.log(low.slice(0, 10));
+      console.log("close");
+      console.log(close.slice(0, 10));
 
 
+      // Plot with Plotly
+      const candlestickTrace = {
+        x: time,
+        open: open,
+        high: high,
+        low: low,
+        close: close,
+        type: 'candlestick',
+        name: tradingPair
+      };
 
-    const datasetString = `${candleLength}_${tradingPair}_${endDate}_${intervalLength}`;
-    setDatasets([...datasets, datasetString]);
+      const layout = {
+        title: `${tradingPair} Candlestick Chart`,
+        xaxis: { type: 'date', title: 'Time' },
+        yaxis: { title: 'Price' },
+        plot_bgcolor: '#2D3748', // Same background as upper panel
+        paper_bgcolor: '#2D3748', // Same background as upper panel
+        font: { color: 'white' }
+      };
+
+      Plotly.newPlot("candlestickChart", [candlestickTrace], layout);
+
+      // Add dataset string to list
+      const datasetString = `${candleLength}_${tradingPair}_${endDate}_${intervalLength}`;
+      setDatasets([...datasets, datasetString]);
+
+    } catch (error) {
+      console.error("Error fetching historical data:", error);
+    }
   };
+
 
   const removeDataset = (index) => {
     setDatasets(datasets.filter((_, i) => i !== index));
@@ -118,7 +168,13 @@ const App = () => {
         <div className="flex-1 flex flex-col gap-4 p-4 overflow-y-auto">
           {activeMenu === "Training" && (
             <>
-              <div className="bg-gray-700 p-4 shadow-lg rounded-lg flex">Top Panel - Live Plot</div>
+
+              {/* Upper Panels */}
+              <div className="bg-gray-700 p-4 shadow-lg rounded-lg flex">
+                <div id="candlestickChart" className="mt-4" style={{ width: '100%', height: '400px' }}></div>
+              </div>
+
+              {/* Center Panels */}
               <div className="bg-gray-700 p-4 shadow-lg rounded-lg flex flex-col">
                 <Tabs
                   value={activeTab}
@@ -149,7 +205,7 @@ const App = () => {
                         </select>
                         <input type="date" className="bg-gray-800 p-2 rounded" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
                         <input type="number" placeholder="Interval Length" className="bg-gray-800 p-2 rounded" value={intervalLength} onChange={(e) => setIntervalLength(e.target.value)} />
-                        <button onClick={addDataset} className="bg-yellow-500 p-2 rounded">Add</button>
+                        <button onClick={addDataset} className="bg-yellow-500 p-2 rounded">Fetch Binance</button>
                       </div>
                       <div className="flex justify-between items-center mb-2">
                         <h2 className="text-lg font-bold">Selected Datasets</h2>
@@ -221,7 +277,6 @@ const App = () => {
                         </div>
                       </div>
                     )}
-
                     {activeTab === 2 && (  // Assuming the "Hyperparameter" tab is activated when activeTab === 2
                       <div className="grid grid-cols-4 gap-4 p-4 border-r border-gray-600">
                         {/* Layer 1 Input */}
