@@ -1,5 +1,5 @@
 // src/api.js
-const API_BASE_URL = "http://localhost:5050"; // Adjust the URL based on your backend
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "https://v2202501113287307394.goodsrv.de/api";
 
 export async function getHistoricalData(startDateOrLastNcandles, tag, candleLength) {
     try {
