@@ -27,7 +27,7 @@ const App = () => {
   const [layer1, setLayer1] = useState(20);
   const [layer2, setLayer2] = useState(15);
   const [batchsize, setBatchsize] = useState(64);
-  const [max_tot_return, setMax_tot_return] = useState(0.3);
+  const [max_tot_return, setMax_tot_return] = useState(99999);
 
   const [response, setResponse] = useState({ error: [], val: [] });
 
@@ -217,12 +217,15 @@ const handleSaveMachineClick = async () => {
                           <div>Total Candles: {totalCandles}</div>
                           <div className="mt-4 flex space-x-4"> {/* Flex container for X and Y inputs */}
                             <div>
-                              <label htmlFor="x-input" className="block">Lookback (X):</label>
-                              <input id="x-input" type="number" value={lookb} className="bg-gray-800 mt-1 p-2 rounded w-full" />
+                                  <label htmlFor="x-input" className="block">Lookback (X):</label>
+                                  <input id="x-input" type="number" value={lookb} className="bg-gray-800 mt-1 p-2 rounded w-full" onChange={(e) => {
+                                  console.log("lookb input change: ", e.target.value);  // Log input value
+                                  setlookb(e.target.value);  // Do not parse, as `lookb` is treated as string
+                                  }} />
                             </div>
                             <div>
-                              <label htmlFor="y-input" className="block">Lookforward (Y):</label>
-                              <input id="y-input" type="number" value={lookf} className="bg-gray-800 mt-1 p-2 rounded w-full" />
+                                  <label htmlFor="y-input" className="block">Lookforward (Y):</label>
+                                  <input id="y-input" type="number" value={lookf} className="bg-gray-800 mt-1 p-2 rounded w-full" onChange={(e) => setlookf(e.target.value)} />
                             </div>
                           </div>
 
@@ -241,7 +244,7 @@ const handleSaveMachineClick = async () => {
                                   <span className="text-xl">?</span>
                                 </a>
                               </div>
-                              <input id="return-mean" type="number" className="bg-gray-800 mt-1 p-2 rounded w-full" value={max_tot_return} /></div>
+                              <input id="return-mean" type="number" className="bg-gray-800 mt-1 p-2 rounded w-full" value={max_tot_return} onChange={(e) => setMax_tot_return(e.target.value)} /></div>
 
 
                           </div>
@@ -260,31 +263,31 @@ const handleSaveMachineClick = async () => {
                         {/* Layer 1 Input */}
                         <div>
                           <label htmlFor="layer1" className="block">Layer 1:</label>
-                          <input id="layer1" type="number" value={layer1} type="number" className="bg-gray-800 mt-1 p-2 rounded w-full" />
+                          <input id="layer1" type="number" value={layer1} type="number" className="bg-gray-800 mt-1 p-2 rounded w-full" onChange={(e) => setLayer1(e.target.value)} />
                         </div>
 
                         {/* Layer 2 Input */}
                         <div>
                           <label htmlFor="layer2" className="block">Layer 2:</label>
-                          <input id="layer2" type="number" value={layer2} type="number" className="bg-gray-800 mt-1 p-2 rounded w-full"  />
+                          <input id="layer2" type="number" value={layer2} type="number" className="bg-gray-800 mt-1 p-2 rounded w-full" onChange={(e) => setLayer2(e.target.value)}  />
                         </div>
 
                         {/* Dropout Input */}
                         <div>
                           <label htmlFor="dropout" className="block">Dropout:</label>
-                          <input id="dropout" type="number" value={dropout} step="0.01" className="bg-gray-800 mt-1 p-2 rounded w-full" />
+                          <input id="dropout" type="number" value={dropout} step="0.01" className="bg-gray-800 mt-1 p-2 rounded w-full" onChange={(e) => setDropout(e.target.value)} />
                         </div>
 
                         {/* Learning Rate Input */}
                         <div>
                           <label htmlFor="learn-rate" className="block">Learning Rate:</label>
-                          <input id="learn-rate" type="number" value={learn_rate} step="0.0001" className="bg-gray-800 mt-1 p-2 rounded w-full"  />
+                          <input id="learn-rate" type="number" value={learn_rate} step="0.0001" className="bg-gray-800 mt-1 p-2 rounded w-full" onChange={(e) => setLearnRate(e.target.value)} />
                         </div>
 
                         {/* N Epochs Input */}
                         <div>
                           <label htmlFor="n-epochs" className="block">N Epochs:</label>
-                          <input id="n-epochs" type="number" value={epochs} className="bg-gray-800 mt-1 p-2 rounded w-full"  />
+                          <input id="n-epochs" type="number" value={epochs} className="bg-gray-800 mt-1 p-2 rounded w-full" onChange={(e) => setEpochs(e.target.value)}  />
                         </div>
                       </div>
                     )}
