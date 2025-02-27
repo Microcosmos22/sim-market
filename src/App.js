@@ -19,7 +19,7 @@ const App = () => {
   const [isSaving, setIsSaving] = useState(false); // To manage the training state
   const [intervalLength, setIntervalLength] = useState(3000); // Default value is 10
 
-  const [epochs, setEpochs] = useState(100); // To hold the log data
+  const [epochs, setEpochs] = useState(50); // To hold the log data
   const [lookf, setlookf] = useState(1); // To hold the log data
   const [lookb, setlookb] = useState(10);
   const [dropout, setDropout] = useState(0.2);
@@ -29,7 +29,7 @@ const App = () => {
   const [batchsize, setBatchsize] = useState(64);
   const [max_tot_return, setMax_tot_return] = useState(99999);
 
-  const [response, setResponse] = useState({ error: [], val: [] });
+  const [response, setResponse] = useState({trainlog: [], error: [], val: [] });
 
 
   const handleTabChange = (event, newValue) => {
@@ -84,14 +84,14 @@ const App = () => {
 
 const handleTrainButtonClick = async () => {
   setIsTraining(true); // Indicate training is in progress
-  setLogs("Training..."); // Clear previous logs
 
   try {
-    const response = await api.trainModel(epochs, lookf, lookb, dropout, learn_rate, layer1, layer2, batchsize, max_tot_return);  // Adjust the URL to your backend endpoint
-    setResponse(response);
-  } catch (error) {
-    console.error("Training failed:", error);
-    setLogs("Error: Unable to start training.");
+    const response_api = await api.trainModel(epochs, lookf, lookb, dropout, learn_rate, layer1, layer2, batchsize, max_tot_return);  // Adjust the URL to your backend endpoint
+    setResponse(response_api);
+    const backendLogs = response_api.log || "";// Ensure it’s a string even if the backend does not return logs
+    setLogs(prevLogs => prevLogs + "\n" + "Training machine in the Python Backend: "); // Append the backend logs to the current logs
+    setLogs(prevLogs => prevLogs + "\n" + backendLogs); // Append the backend logs to the current logs
+
   } finally {
     setIsTraining(false); // Indicate training is complete
   }};
@@ -316,11 +316,12 @@ const handleSaveMachineClick = async () => {
                           <label htmlFor="log-output" className="block text-lg">Training Logs:</label>
                           <textarea
                             id="log-output"
-                            value={logs}
+                            value={logs}  // This binds the textarea value to the logs state
                             readOnly
                             className="mt-2 w-full p-2 border rounded h-40 bg-gray-100 text-black"
                             placeholder="Logs will be displayed here..."
                           />
+
                         </div>
                       </div>
                     )}
