@@ -51,22 +51,16 @@ const App = () => {
   const addDataset = async () => {
     if (!endDate || !intervalLength) return;
     let formattedEndDate = endDate + " 00:00:00";
-    console.log("Add Dataset..");
+
     try {
       const response_api = await api.getHistoricalData([formattedEndDate, intervalLength], tradingPair, candleLength);
-      const response = {target: response_api.target, features: response_api.features, timestamps: response_api.timestamps, data: response_api.data, tradingPair: tradingPair};
-
 
       const datasetString = `${candleLength}_${tradingPair}_${endDate}_${intervalLength}`;
+
       setDatasets([...datasets, datasetString]);
-      // Correct way to update an object
-      setResponseData({
-        ...response_data,  // Spread the old response data
-        target: response.target,
-        features: response.features,
-        data: response.data,
-        tradingPair: response.tradingPair
-      });
+      setResponseData({...response_data, features: response_api.features,data: response_api.data, time: response_api.timestamps, tradingPair: tradingPair});
+
+
 
 
     } catch (error) {
@@ -150,7 +144,7 @@ const handleSaveMachineClick = async () => {
 
               {/* Upper Panels */}
 
-              <UpperPanel target={response_data.target} features={response_data.features} data={response_data.data} tradingPair={response_data.tradingPair} />
+              <UpperPanel target={response_data.target} features={response_data.features} time={response_data.time} data={response_data.data} tradingPair={response_data.tradingPair} />
 
 
               {/* Center Panels */}

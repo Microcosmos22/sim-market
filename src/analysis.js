@@ -90,12 +90,14 @@ function displayCorrelationMatrix(matrix) {
 }
 
 // Function to display Candlestick Chart
-function displayCandlechart(data, tradingPair) {
-  const time = data.map(item => new Date(item[0])); // Convert timestamps to Date objects
+function displayCandlechart(data, time, tradingPair) {
+  //const time = data.map(item => new Date(item[0])); // Convert timestamps to Date objects
   const open = data.map(item => item[1]);
   const high = data.map(item => item[2]);
   const low = data.map(item => item[3]);
   const close = data.map(item => item[4]);
+
+
 
   const candlestickTrace = {
     x: time,
@@ -121,6 +123,9 @@ function displayCandlechart(data, tradingPair) {
     paper_bgcolor: '#2D3748',
     font: { color: 'white' }
   };
+
+
+  console.log("Data to be plotted:", time);
 
   return (
     <div className="candlestick-container" style={{ padding: '20px', backgroundColor: 'lightgray' }}>

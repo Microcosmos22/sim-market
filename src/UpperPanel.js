@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import analysis from './analysis';
 
 
-const UpperPanel = ({target, features, data, tradingPair}) => {
+const UpperPanel = ({target, features, time, data, tradingPair}) => {
   const [activeTab, setActiveTab] = useState(0);
   const [correlationMatrixDiv, setCorrelationMatrixDiv] = useState(null);
   const [boxplotsDiv, setBoxplotsDiv] = useState(null);
@@ -18,12 +18,14 @@ const UpperPanel = ({target, features, data, tradingPair}) => {
     useEffect(() => {
       async function fetchData() {
         if (features.length > 0) {
-          console.log("Fetching plots to UpperPanel...");
+          console.log('Plotter fetched target size:', target.length);
+          console.log('Features shape: ', features.length, 'x', features[0].length);
+          console.log('timestamps', time);
 
           // Call plotting methods with updated data
           const corr = analysis.displayCorrelationMatrix(features);
           const box = analysis.displayBoxplots(features);
-          const candlechart = analysis.displayCandlechart(data);
+          const candlechart = analysis.displayCandlechart(data, time, tradingPair);
 
           // Update the state with the new HTML containing the figures
           setCandlechartDiv(candlechart);
