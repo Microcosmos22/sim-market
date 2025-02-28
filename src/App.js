@@ -5,6 +5,8 @@ import { FaTachometerAlt, FaDatabase, FaCogs, FaChartLine, FaRunning, FaBars, Fa
 import * as api from "./api"; // Import all API functions
 import BottomPanel from "./BottomPanel";
 import Plotly from 'plotly.js-dist';
+import UpperPanel from './UpperPanel'; // Adjust the path if needed
+
 
 const App = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(true); // Default menu expanded
@@ -29,7 +31,8 @@ const App = () => {
   const [batchsize, setBatchsize] = useState(64);
   const [max_tot_return, setMax_tot_return] = useState(99999);
 
-  const [response, setResponse] = useState({trainlog: [], error: [], val: [] });
+  const [response_train, setResponse] = useState({trainlog: [], error: [], val: [] });
+  const [response_data, setResponseData] = useState({target: [], features: [], timestamps: [], data: [], tradingPair: " " });
 
 
   const handleTabChange = (event, newValue) => {
@@ -48,34 +51,23 @@ const App = () => {
   const addDataset = async () => {
     if (!endDate || !intervalLength) return;
     let formattedEndDate = endDate + " 00:00:00";
-
+    console.log("Add Dataset..");
     try {
-      const response = await api.getHistoricalData([formattedEndDate, intervalLength], tradingPair, candleLength);
-      const { timestamps, data } = response;
-
-      // data as """ (time, open, high, low, close, volume, close_time etc.) """
-      const time = data.map(item => item[0]); // Convert timestamps to Date objects
-      const open = data.map(item => item[1]);
-      const high = data.map(item => item[2]);
-      const low = data.map(item => item[3]);
-      const close = data.map(item => item[4]);
+      const response_api = await api.getHistoricalData([formattedEndDate, intervalLength], tradingPair, candleLength);
+      const response = {target: response_api.target, features: response_api.features, timestamps: response_api.timestamps, data: response_api.data, tradingPair: tradingPair};
 
 
-      const candlestickTrace = {
-        x: time, open: open, high: high,
-        low: low, close: close,type: 'candlestick', name: tradingPair};
-
-      const layout = {
-        title: `${tradingPair} Candlestick Chart`,
-        xaxis: { type: 'date', title: 'Time' },
-        yaxis: {title: 'Price',autorange: true},
-        plot_bgcolor: '#2D3748',
-        paper_bgcolor: '#2D3748',
-        font: { color: 'white' }};
-
-      Plotly.newPlot("candlestickChart", [candlestickTrace], layout);
       const datasetString = `${candleLength}_${tradingPair}_${endDate}_${intervalLength}`;
       setDatasets([...datasets, datasetString]);
+      // Correct way to update an object
+      setResponseData({
+        ...response_data,  // Spread the old response data
+        target: response.target,
+        features: response.features,
+        data: response.data,
+        tradingPair: response.tradingPair
+      });
+
 
     } catch (error) {
       console.error("Error fetching historical data:", error);
@@ -86,9 +78,9 @@ const handleTrainButtonClick = async () => {
   setIsTraining(true); // Indicate training is in progress
 
   try {
-    const response_api = await api.trainModel(epochs, lookf, lookb, dropout, learn_rate, layer1, layer2, batchsize, max_tot_return);  // Adjust the URL to your backend endpoint
-    setResponse(response_api);
-    const backendLogs = response_api.log || "";// Ensure it’s a string even if the backend does not return logs
+    const response_train = await api.trainModel(epochs, lookf, lookb, dropout, learn_rate, layer1, layer2, batchsize, max_tot_return);  // Adjust the URL to your backend endpoint
+    setResponse(response_train);
+    const backendLogs = response_train.log || "";// Ensure it’s a string even if the backend does not return logs
     setLogs(prevLogs => prevLogs + "\n" + "Training machine in the Python Backend: "); // Append the backend logs to the current logs
     setLogs(prevLogs => prevLogs + "\n" + backendLogs); // Append the backend logs to the current logs
 
@@ -157,9 +149,9 @@ const handleSaveMachineClick = async () => {
             <>
 
               {/* Upper Panels */}
-              <div className="bg-gray-700 p-4 shadow-lg rounded-lg flex">
-                <div id="candlestickChart" className="mt-4" style={{ width: '100%', height: '400px' }}></div>
-              </div>
+
+              <UpperPanel target={response_data.target} features={response_data.features} data={response_data.data} tradingPair={response_data.tradingPair} />
+
 
               {/* Center Panels */}
               <div className="bg-gray-700 p-4 shadow-lg rounded-lg flex flex-col">
@@ -329,7 +321,7 @@ const handleSaveMachineClick = async () => {
               </div>
               {/* Bottom Panel */}
               <div className="bg-gray-700 p-4 shadow-lg rounded-lg">
-                <BottomPanel response={response || { error: [], val: [] }} />
+                <BottomPanel response={response_train || { error: [], val: [] }} />
               </div>
             </>
           )}
