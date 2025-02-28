@@ -205,7 +205,7 @@ const handleSaveMachineClick = async () => {
                             <div>
                                   <label htmlFor="x-input" className="block">Lookback (X):</label>
                                   <input id="x-input" type="number" value={lookb} className="bg-gray-800 mt-1 p-2 rounded w-full" onChange={(e) => {
-                                  console.log("lookb input change: ", e.target.value);  // Log input value
+                                  
                                   setlookb(e.target.value);  // Do not parse, as `lookb` is treated as string
                                   }} />
                             </div>

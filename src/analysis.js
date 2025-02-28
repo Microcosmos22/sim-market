@@ -1,6 +1,7 @@
 import React from 'react';
 import Plot from 'react-plotly.js'; // Assuming Plotly is installed
 import Plotly from 'plotly.js-dist';
+import { useState, useEffect } from 'react';
 
 // Function to compute Pearson Correlation Matrix
 export function correlation_matrix(features) {
@@ -97,8 +98,6 @@ function displayCandlechart(data, time, tradingPair) {
   const low = data.map(item => item[3]);
   const close = data.map(item => item[4]);
 
-
-
   const candlestickTrace = {
     x: time,
     open: open,
@@ -125,12 +124,44 @@ function displayCandlechart(data, time, tradingPair) {
   };
 
 
-  console.log("Data to be plotted:", time);
+  return (
+    <div className="candlestick-container" style={{ padding: '20px', backgroundColor: 'bg-gray-800' }}>
+      <h3 className="candlestick-title" style={{ color: 'white', textAlign: 'center' }}>{`${tradingPair} Candlestick Chart`}</h3>
+      <Plot data={[candlestickTrace]} layout={layout} />
+    </div>
+  );
+}
+// Define your functional component correctly
+export function PlotFeatureTimeseries({ features }) {
+  // Create plot data without managing visibility manually
+  const plotData = features[0].map((_, timeIndex) => ({
+    x: features.map((featureData) => featureData[timeIndex][1]), // Extract time values (same for all features)
+    y: features.map((featureData) => featureData[timeIndex][0]), // Extract feature values for each feature
+    type: 'scatter',
+    mode: 'lines',
+    name: `Timestamp ${timeIndex + 1}`, // Set the name to be used in the legend
+    // Plotly handles visibility via the 'legendonly' option
+  }));
+
+  console.log('features', features);
+
+  // Plotly layout configuration
+  const layout = {
+    title: 'Time Series of 12 Features',
+    xaxis: { title: 'Time', type: 'date' },
+    yaxis: { title: 'Feature Value' },
+    plot_bgcolor: '#f0f0f0',
+    paper_bgcolor: '#f0f0f0',
+    font: { color: 'black' },
+    showlegend: true, // Enables the legend for toggling visibility
+  };
 
   return (
-    <div className="candlestick-container" style={{ padding: '20px', backgroundColor: 'lightgray' }}>
-      <h3 className="candlestick-title" style={{ color: 'black', textAlign: 'center' }}>{`${tradingPair} Candlestick Chart`}</h3>
-      <Plot data={[candlestickTrace]} layout={layout} />
+    <div style={{ padding: '20px', backgroundColor: 'lightgray' }}>
+      <h3 style={{ color: 'black', textAlign: 'center' }}>Time Series of Features</h3>
+
+      {/* Plotly chart */}
+      <Plot data={plotData} layout={layout} />
     </div>
   );
 }
@@ -139,4 +170,5 @@ export default {
   displayCorrelationMatrix,
   displayBoxplots,
   displayCandlechart,
+  PlotFeatureTimeseries
 };
