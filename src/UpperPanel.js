@@ -4,12 +4,12 @@ import analysis from './analysis';  // Assuming analysis includes the necessary 
 import { PlotFeatureTimeseries } from './analysis'; // Importing PlotFeatureTimeseries directly
 
 
-const UpperPanel = (chosen_data) => {
+const UpperPanel = ({chosen_data}) => {
   const [activeTab, setActiveTab] = useState(0);
   const [correlationMatrixDiv, setCorrelationMatrixDiv] = useState(null);
   const [boxplotsDiv, setBoxplotsDiv] = useState(null);
   const [candleDivs, setCandlechartDiv] = useState([]);
-  const [featuresDiv, setFeaturesDiv] = useState([]);
+  const [featuresDivs, setFeaturesDiv] = useState([]);
 
   // Handle tab changes
   const handleTabChange = (event, newValue) => {
@@ -26,15 +26,17 @@ const UpperPanel = (chosen_data) => {
         return analysis.displayCandlechart(dataset.data, dataset.time, dataset.tradingPair);
         });
 
+        const newfeaturesDivs = chosen_data.map((dataset, index) => {
+        return (<PlotFeatureTimeseries features={dataset.features} time={dataset.time}/>);
+        });
+
         setCandlechartDiv(newCandleDivs);
+        setFeaturesDiv(newfeaturesDivs);
 
         // Update the state with the new HTML containing the figures
         //setCandlechartDiv();
         //setCorrelationMatrixDiv(analysis.displayCorrelationMatrix(dataset.features)); // Store the correlation matrix div
         //setBoxplotsDiv(analysis.displayBoxplots(dataset.features)); // Store the boxplots div
-
-        // Using PlotFeatureTimeseries as a proper React component
-        //setFeaturesDiv(<PlotFeatureTimeseries features={features} time={time} />);
      }
     }
 
@@ -63,14 +65,18 @@ const UpperPanel = (chosen_data) => {
           <div>
           {candleDivs.length > 0 ? (candleDivs.map((candleDiv, index) => (
             <div key={index}> {candleDiv} </div>
-          ))) : (<div>No plotting divs were generated</div>)}
+          ))) : (<div>No candlestick divs were generated</div>)}
           </div>
 
 
         )}{activeTab === 1 && (
-          <div>
-        <div>{featuresDiv}</div> {/* This renders PlotFeatureTimeseries */}
+
+        <div>
+        {featuresDivs.length > 0 ? (featuresDivs.map((featuresDiv, index) => (
+          <div key={index}> {featuresDiv} </div>
+        ))) : (<div>No features divs were generated</div>)}
         </div>
+
       )}{activeTab === 2 && (
 
       <div className="my-4">

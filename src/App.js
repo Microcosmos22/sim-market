@@ -51,7 +51,7 @@ const App = () => {
   }, [selectedIndices]);
 
   useEffect(() => {
-  console.log(`Checkboxes confirm having chosen ${chosen_data.length} datasets`);
+  //console.log(`Checkboxes confirm having chosen ${chosen_data.length} datasets`);
 }, [chosen_data]); // This runs every time chosen_data changes
 
 

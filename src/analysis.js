@@ -131,34 +131,47 @@ function displayCandlechart(data, time, tradingPair) {
     </div>
   );
 }
-// Define your functional component correctly
-export function PlotFeatureTimeseries({ features }) {
-  // Create plot data without managing visibility manually
-  //console.log(features);
+export function PlotFeatureTimeseries({ features, time }) {
+  // For ONE Dataset, it creates the div and plot for all features over time
 
-  const plotData = features[0].map((_, timeIndex) => ({
-    x: features.map((featureData) => featureData[timeIndex][1]), // Extract time values (same for all features)
-    y: features.map((featureData) => featureData[timeIndex][0]), // Extract feature values for each feature
-    type: 'scatter',
-    mode: 'lines',
-    name: `Timestamp ${timeIndex + 1}`, // Set the name to be used in the legend
-    // Plotly handles visibility via the 'legendonly' option
-  }));
+  console.log(features.length, features[0].length); // should print 2950 12
+  console.log(features[0]);
 
-  // Plotly layout configuration
+  const featureNames = ["SMA20", "SMA50", "RSI", "Bb width", "Momentum", "Volume", "Stat K", "Stat D", "MACDdiff", "month", "week", "day"];
+
+  // Generate plot data for each feature
+  const plotData = features.map((_, featureIndex) => {
+    return {
+        x: Array.from({ length: features.length }, (_, timeIndex) => timeIndex), // Running time index as x-axis
+        y: Array.from({ length: features.length }, (_, timeIndex) => features[timeIndex][featureIndex]), // Actual values at each timestep
+        type: 'scatter',
+        mode: 'lines',
+        name: featureNames[featureIndex] || `Feature ${featureIndex + 1}`, // Use manual names or default
+        line: { shape: 'linear' },
+            };
+        });
+
+
+  // Layout configuration for Plotly
   const layout = {
     title: 'Time Series of 12 Features',
-    xaxis: { title: 'Time', type: 'date' },
-    yaxis: { title: 'Feature Value' },
+    xaxis: {
+      title: 'Timestep',
+      showgrid: true,
+      zeroline: false,
+    },
+    yaxis: {
+      title: 'Feature Value',
+    },
     plot_bgcolor: '#2D3748',
     paper_bgcolor: '#2D3748',
     font: { color: 'white' },
-    showlegend: true, // Enables the legend for toggling visibility
+    showlegend: true, // Ensures the legend is visible
   };
 
   return (
-    <div style={{ padding: '20px', backgroundColor: 'lightgray' }}>
-      <h3 style={{ color: 'black', textAlign: 'center' }}>Time Series of Features</h3>
+    <div style={{ padding: '20px', backgroundColor: 'bg-gray-800' }}>
+      <h3 style={{ color: 'white', textAlign: 'center' }}>Time Series of Features</h3>
 
       {/* Plotly chart */}
       <Plot data={plotData} layout={layout} />
