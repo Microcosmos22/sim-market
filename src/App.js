@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, Tab } from '@mui/material';
 import { motion } from 'framer-motion';
 import { FaTachometerAlt, FaDatabase, FaCogs, FaChartLine, FaRunning, FaBars, FaClipboardList, FaTimes } from 'react-icons/fa';
@@ -12,7 +12,6 @@ const App = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(true); // Default menu expanded
   const [activeTab, setActiveTab] = useState(0);
   const [activeMenu, setActiveMenu] = useState("Training");
-  const [datasets, setDatasets] = useState([]);
   const [candleLength, setCandleLength] = useState("1hour");
   const [tradingPair, setTradingPair] = useState("BTCUSD");
   const [endDate, setEndDate] = useState(getTodayDate());
@@ -31,13 +30,30 @@ const App = () => {
   const [batchsize, setBatchsize] = useState(64);
   const [max_tot_return, setMax_tot_return] = useState(99999);
 
-  const [response_train, setResponse] = useState({trainlog: [], error: [], val: [] });
-  const [response_data, setResponseData] = useState({target: [], features: [], timestamps: [], data: [], tradingPair: " " });
+  // Dynamical list of API responses
+  const [response_train, setResponseTrain] = useState([]);
+  const [response_data, setResponseData] = useState([]);
 
+  const [datasets, setDatasets] = useState([]); // Only the stringname
+  const [selectedIndices, setSelectedIndices] = useState([]); // To track selected checkboxes
+  const [chosen_data, setChosenData] = useState([]);
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
   };
+
+  useEffect(() => {
+    console.log(`N Datasets generated: ${response_data.length}`);
+  }, [response_data]); // Only runs when response_data changes
+
+  useEffect(() => {
+    console.log('Selected Indices:', selectedIndices);
+  }, [selectedIndices]);
+
+  useEffect(() => {
+  console.log(`Checkboxes confirm having chosen ${chosen_data.length} datasets`);
+}, [chosen_data]); // This runs every time chosen_data changes
+
 
   function getTodayDate() {
     const today = new Date();
@@ -47,20 +63,33 @@ const App = () => {
     return `${yyyy}-${mm}-${dd}`;
   }
 
+  const handleCheckboxChange = (index) => {
+     setSelectedIndices((prevSelectedIndices) => {
+       const newSelectedIndices = prevSelectedIndices.includes(index)
+         ? prevSelectedIndices.filter((i) => i !== index) // Deselect
+         : [...prevSelectedIndices, index]; // Select
+
+       const newSelectedDatasets = newSelectedIndices.map(i => response_data[i]);
+       setChosenData(newSelectedDatasets); // Update the actual datasets
+       return newSelectedIndices;
+     });
+   };
+
 
   const addDataset = async () => {
     if (!endDate || !intervalLength) return;
     let formattedEndDate = endDate + " 00:00:00";
 
     try {
-      const response_api = await api.getHistoricalData([formattedEndDate, intervalLength], tradingPair, candleLength);
+      // The API response will be used for plotting. Further calculations continue
+      // with python and the server-saved Datasets.
+      // The datasets will be preserved for each logging session and deleted after.
 
+      const response_api = await api.getHistoricalData([formattedEndDate, intervalLength], tradingPair, candleLength);
       const datasetString = `${candleLength}_${tradingPair}_${endDate}_${intervalLength}`;
 
-      setDatasets([...datasets, datasetString]);
-      setResponseData({...response_data, features: response_api.features,data: response_api.data, time: response_api.timestamps, tradingPair: tradingPair});
-
-
+      setDatasets(prev => [...prev, datasetString]);
+      setResponseData(prev => [...prev, {target: response_api.target, features: response_api.features, data: response_api.data, time: response_api.timestamps, tradingPair: tradingPair}])
 
 
     } catch (error) {
@@ -73,7 +102,7 @@ const handleTrainButtonClick = async () => {
 
   try {
     const response_train = await api.trainModel(epochs, lookf, lookb, dropout, learn_rate, layer1, layer2, batchsize, max_tot_return);  // Adjust the URL to your backend endpoint
-    setResponse(response_train);
+    setResponseTrain(response_train);
     const backendLogs = response_train.log || "";// Ensure it’s a string even if the backend does not return logs
     setLogs(prevLogs => prevLogs + "\n" + "Training machine in the Python Backend: "); // Append the backend logs to the current logs
     setLogs(prevLogs => prevLogs + "\n" + backendLogs); // Append the backend logs to the current logs
@@ -144,7 +173,7 @@ const handleSaveMachineClick = async () => {
 
               {/* Upper Panels */}
 
-              <UpperPanel target={response_data.target} features={response_data.features} time={response_data.time} data={response_data.data} tradingPair={response_data.tradingPair} />
+              <UpperPanel chosen_data = {chosen_data} />
 
 
               {/* Center Panels */}
@@ -181,19 +210,24 @@ const handleSaveMachineClick = async () => {
                         <button onClick={addDataset} className="bg-yellow-500 p-2 rounded">Fetch Binance</button>
                       </div>
                       <div className="flex justify-between items-center mb-2">
+
+
                         <h2 className="text-lg font-bold">Selected Datasets</h2>
                         <span className="text-yellow-400">Total Candles: {totalCandles}</span>
                       </div>
+
                       <div className="bg-gray-900 p-4 rounded overflow-y-auto max-h-40">
                         {datasets.map((dataset, index) => (
                           <div key={index} className="p-2 border-b border-gray-700 flex justify-between items-center">
                             <span>{dataset}</span>
-                            <button onClick={() => removeDataset(index)} className="text-red-500 hover:text-red-700">
-                              <FaTimes />
-                            </button>
+                            <input type="checkbox" checked={selectedIndices.includes(index)} // If index is in selectedIndices, it's checked
+                              onChange={() => handleCheckboxChange(index)} className="ml-2" />
+                            <button onClick={() => removeDataset(index)} className="text-red-500 hover:text-red-700 ml-2">
+                              <FaTimes /></button>
                           </div>
                         ))}
                       </div>
+
                     </div>
                   )}
                   {activeTab === 1 && (
@@ -205,7 +239,7 @@ const handleSaveMachineClick = async () => {
                             <div>
                                   <label htmlFor="x-input" className="block">Lookback (X):</label>
                                   <input id="x-input" type="number" value={lookb} className="bg-gray-800 mt-1 p-2 rounded w-full" onChange={(e) => {
-                                  
+
                                   setlookb(e.target.value);  // Do not parse, as `lookb` is treated as string
                                   }} />
                             </div>

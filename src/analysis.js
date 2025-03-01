@@ -134,6 +134,8 @@ function displayCandlechart(data, time, tradingPair) {
 // Define your functional component correctly
 export function PlotFeatureTimeseries({ features }) {
   // Create plot data without managing visibility manually
+  //console.log(features);
+
   const plotData = features[0].map((_, timeIndex) => ({
     x: features.map((featureData) => featureData[timeIndex][1]), // Extract time values (same for all features)
     y: features.map((featureData) => featureData[timeIndex][0]), // Extract feature values for each feature
@@ -143,16 +145,14 @@ export function PlotFeatureTimeseries({ features }) {
     // Plotly handles visibility via the 'legendonly' option
   }));
 
-  console.log('features', features);
-
   // Plotly layout configuration
   const layout = {
     title: 'Time Series of 12 Features',
     xaxis: { title: 'Time', type: 'date' },
     yaxis: { title: 'Feature Value' },
-    plot_bgcolor: '#f0f0f0',
-    paper_bgcolor: '#f0f0f0',
-    font: { color: 'black' },
+    plot_bgcolor: '#2D3748',
+    paper_bgcolor: '#2D3748',
+    font: { color: 'white' },
     showlegend: true, // Enables the legend for toggling visibility
   };
 
