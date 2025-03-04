@@ -1,0 +1,293 @@
+import { Tabs, Tab } from '@mui/material';
+import { useState, useEffect } from 'react';
+import * as api from "./api"; // Import all API functions
+import { FaTachometerAlt, FaDatabase, FaCogs, FaChartLine, FaRunning, FaBars, FaClipboardList, FaTimes } from 'react-icons/fa';
+
+
+
+const CenterPanel = ({setResponseTrain, setChosenData}) => {
+
+  const [epochs, setEpochs] = useState(50); // To hold the log data
+  const [lookf, setlookf] = useState(1); // To hold the log data
+  const [lookb, setlookb] = useState(10);
+  const [dropout, setDropout] = useState(0.2);
+  const [learn_rate, setLearnRate] = useState(0.1);
+  const [layer1, setLayer1] = useState(20);
+  const [layer2, setLayer2] = useState(15);
+  const [batchsize, setBatchsize] = useState(64);
+  const [max_tot_return, setMax_tot_return] = useState(99999);
+  const [activeTab, setActiveTab] = useState(0);
+  const [candleLength, setCandleLength] = useState("1hour");
+  const [tradingPair, setTradingPair] = useState("BTCUSD");
+  const [endDate, setEndDate] = useState(getTodayDate());
+  const [selectedIndices, setSelectedIndices] = useState([]); // To track selected checkboxes
+  const [intervalLength, setIntervalLength] = useState(1000); // Default value is 10
+  const [logs, setLogs] = useState(""); // To hold the log data
+
+  const [isTraining, setIsTraining] = useState(false); // To manage the training state
+  const [isSaving, setIsSaving] = useState(false); // To manage the training state
+
+  const [response_data, setResponseData] = useState([]);
+
+  const [datasets, setDatasets] = useState([]); // Only the stringname
+
+
+  const handleCheckboxChange = (index) => {
+     setSelectedIndices((prevSelectedIndices) => {
+       const newSelectedIndices = prevSelectedIndices.includes(index)
+         ? prevSelectedIndices.filter((i) => i !== index) // Deselect
+         : [...prevSelectedIndices, index]; // Select
+
+       const newSelectedDatasets = newSelectedIndices.map(i => response_data[i]);
+       setChosenData(newSelectedDatasets); // Update the actual datasets
+       return newSelectedIndices;
+     });
+   };
+
+
+   useEffect(() => {
+     console.log(`N Datasets generated: ${response_data.length}`);
+   }, [response_data]); // Only runs when response_data changes
+
+   useEffect(() => {
+     console.log('Selected Indices:', selectedIndices);
+   }, [selectedIndices]);
+
+
+  const addDataset = async () => {
+    if (!endDate || !intervalLength) return;
+    let formattedEndDate = endDate + " 00:00:00";
+
+    try {
+      // The API response will be used for plotting. Further calculations continue
+      // with python and the server-saved Datasets.
+      // The datasets will be preserved for each logging session and deleted after.
+
+      const response_api = await api.getHistoricalData([formattedEndDate, intervalLength], tradingPair, candleLength);
+      const datasetString = `${candleLength}_${tradingPair}_${endDate}_${intervalLength}`;
+
+      setDatasets(prev => [...prev, datasetString]);
+      setResponseData(prev => [...prev, {target: response_api.target, features: response_api.features, data: response_api.data, time: response_api.timestamps, tradingPair: tradingPair}])
+
+
+    } catch (error) {
+      console.error("Error fetching historical data:", error);
+    }};
+
+
+function getTodayDate() {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+  const dd = String(today.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+const handleSaveMachineClick = async () => {
+  return 0;
+}
+
+
+const handleTrainButtonClick = async () => {
+  setIsTraining(true); // Indicate training is in progress
+
+  try {
+    const response_train = await api.trainModel(epochs, lookf, lookb, dropout, learn_rate, layer1, layer2, batchsize, max_tot_return);  // Adjust the URL to your backend endpoint
+    setResponseTrain(response_train);
+    const backendLogs = response_train.log || "";// Ensure it’s a string even if the backend does not return logs
+    setLogs(prevLogs => prevLogs + "\n" + "Training machine in the Python Backend: "); // Append the backend logs to the current logs
+    setLogs(prevLogs => prevLogs + "\n" + backendLogs); // Append the backend logs to the current logs
+
+  } finally {
+    setIsTraining(false); // Indicate training is complete
+  }};
+
+  const removeDataset = (index) => {
+    setDatasets(datasets.filter((_, i) => i !== index));
+  };
+
+  const totalCandles = datasets.reduce((sum, dataset) => {
+    const parts = dataset.split("_");
+    return sum + parseInt(parts[3], 10);
+  }, 0);
+
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+  };
+
+return(
+
+<div className="bg-gray-700 p-4 shadow-lg rounded-lg flex flex-col">
+  <Tabs
+    value={activeTab}
+    onChange={handleTabChange}
+    textColor="inherit"
+    TabIndicatorProps={{ style: { background: 'yellow' } }}
+    className="mb-4"
+  >
+    <Tab label="Datasets" />
+    <Tab label="Pre-processing" />
+    <Tab label="Hyperparameters" />
+    <Tab label="Training" />
+  </Tabs>
+  <div className="mt-4">
+    {activeTab === 0 && (
+      <div>
+        <div className="flex gap-4 mb-4">
+          <select className="bg-gray-800 p-2 rounded" value={candleLength} onChange={(e) => setCandleLength(e.target.value)}>
+            <option>15min</option>
+            <option>1hour</option>
+            <option>4hour</option>
+          </select>
+          <select className="bg-gray-800 p-2 rounded" value={tradingPair} onChange={(e) => setTradingPair(e.target.value)}>
+            <option>BTCUSD</option>
+            <option>XRPUSD</option>
+            <option>ETHUSD</option>
+            <option>LTCUSD</option>
+          </select>
+          <input type="date" className="bg-gray-800 p-2 rounded" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+          <input type="number" placeholder="Interval Length" className="bg-gray-800 p-2 rounded" value={intervalLength} onChange={(e) => setIntervalLength(e.target.value)} />
+          <button onClick={addDataset} className="bg-yellow-500 p-2 rounded">Fetch Binance</button>
+        </div>
+        <div className="flex justify-between items-center mb-2">
+
+
+          <h2 className="text-lg font-bold">Selected Datasets</h2>
+          <span className="text-yellow-400">Total Candles: {totalCandles}</span>
+        </div>
+
+        <div className="bg-gray-900 p-4 rounded overflow-y-auto max-h-40">
+          {datasets.map((dataset, index) => (
+            <div key={index} className="p-2 border-b border-gray-700 flex justify-between items-center">
+              <span>{dataset}</span>
+              <input type="checkbox" checked={selectedIndices.includes(index)} // If index is in selectedIndices, it's checked
+                onChange={() => handleCheckboxChange(index)} className="ml-2" />
+              <button onClick={() => removeDataset(index)} className="text-red-500 hover:text-red-700 ml-2">
+                <FaTimes /></button>
+            </div>
+          ))}
+        </div>
+
+      </div>
+    )}
+    {activeTab === 1 && (
+        <div className="grid grid-cols-3 gap-4 border-r border-gray-600">
+          {/* Column 1 */}
+          <div className="p-4">
+            <div>Total Candles: {totalCandles}</div>
+            <div className="mt-4 flex space-x-4"> {/* Flex container for X and Y inputs */}
+              <div>
+                    <label htmlFor="x-input" className="block">Lookback (X):</label>
+                    <input id="x-input" type="number" value={lookb} className="bg-gray-800 mt-1 p-2 rounded w-full" onChange={(e) => {
+
+                    setlookb(e.target.value);  // Do not parse, as `lookb` is treated as string
+                    }} />
+              </div>
+              <div>
+                    <label htmlFor="y-input" className="block">Lookforward (Y):</label>
+                    <input id="y-input" type="number" value={lookf} className="bg-gray-800 mt-1 p-2 rounded w-full" onChange={(e) => setlookf(e.target.value)} />
+              </div>
+            </div>
+
+          <div>Samples after slicing: {1000}</div> {/* Replace M with the dynamic value */}
+          </div>
+
+          {/* Column 2 */}
+          <div className="p-4 border-l border-gray-600">
+
+
+            <div className="mt-4 flex space-x-4"> {/* Flex container for Return Mean and Return Interval */}
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="return-mean" className="block">Max. interval return:</label>
+                  <a href="/help" target="_blank" className="ml-2 text-blue-500 hover:underline">
+                    <span className="text-xl">?</span>
+                  </a>
+                </div>
+                <input id="return-mean" type="number" className="bg-gray-800 mt-1 p-2 rounded w-full" value={max_tot_return} onChange={(e) => setMax_tot_return(e.target.value)} /></div>
+
+
+            </div>
+            <div>Samples after filtering: {1000}</div>
+          </div>
+
+
+          {/* Column 3 */}
+          <div className="p-4 border-l border-gray-600">
+            {/* You can add content to this column as needed */}
+          </div>
+        </div>
+      )}
+      {activeTab === 2 && (  // Assuming the "Hyperparameter" tab is activated when activeTab === 2
+        <div className="grid grid-cols-4 gap-4 p-4 border-r border-gray-600">
+          {/* Layer 1 Input */}
+          <div>
+            <label htmlFor="layer1" className="block">Layer 1:</label>
+            <input id="layer1" type="number" value={layer1} type="number" className="bg-gray-800 mt-1 p-2 rounded w-full" onChange={(e) => setLayer1(e.target.value)} />
+          </div>
+
+          {/* Layer 2 Input */}
+          <div>
+            <label htmlFor="layer2" className="block">Layer 2:</label>
+            <input id="layer2" type="number" value={layer2} type="number" className="bg-gray-800 mt-1 p-2 rounded w-full" onChange={(e) => setLayer2(e.target.value)}  />
+          </div>
+
+          {/* Dropout Input */}
+          <div>
+            <label htmlFor="dropout" className="block">Dropout:</label>
+            <input id="dropout" type="number" value={dropout} step="0.01" className="bg-gray-800 mt-1 p-2 rounded w-full" onChange={(e) => setDropout(e.target.value)} />
+          </div>
+
+          {/* Learning Rate Input */}
+          <div>
+            <label htmlFor="learn-rate" className="block">Learning Rate:</label>
+            <input id="learn-rate" type="number" value={learn_rate} step="0.0001" className="bg-gray-800 mt-1 p-2 rounded w-full" onChange={(e) => setLearnRate(e.target.value)} />
+          </div>
+
+          {/* N Epochs Input */}
+          <div>
+            <label htmlFor="n-epochs" className="block">N Epochs:</label>
+            <input id="n-epochs" type="number" value={epochs} className="bg-gray-800 mt-1 p-2 rounded w-full" onChange={(e) => setEpochs(e.target.value)}  />
+          </div>
+        </div>
+      )}
+
+      {activeTab === 3 && (  // Training Tab
+        <div className="p-4">
+          {/* Train Button */}
+          <button
+            onClick={handleTrainButtonClick}
+            className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 disabled:bg-gray-300"
+            disabled={isTraining}
+          >
+            {isTraining ? "Training..." : "Train"}
+          </button>
+
+          <button
+            onClick={handleSaveMachineClick}
+            className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 disabled:bg-gray-300"
+            disabled={isSaving}
+          >
+            {isSaving ? "Saving..." : "Save Machine for Tracking"}
+          </button>
+
+          {/* Log Output */}
+          <div className="mt-4">
+            <label htmlFor="log-output" className="block text-lg">Training Logs:</label>
+            <textarea
+              id="log-output"
+              value={logs}  // This binds the textarea value to the logs state
+              readOnly
+              className="mt-2 w-full p-2 border rounded h-40 bg-gray-100 text-black"
+              placeholder="Logs will be displayed here..."
+            />
+
+          </div>
+        </div>
+      )}
+  </div>
+</div>
+);
+};
+
+export default CenterPanel;

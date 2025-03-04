@@ -6,7 +6,8 @@ import { PlotFeatureTimeseries } from './analysis'; // Importing PlotFeatureTime
 
 const UpperPanel = ({chosen_data}) => {
   const [activeTab, setActiveTab] = useState(0);
-  const [correlationMatrixDiv, setCorrelationMatrixDiv] = useState(null);
+  const [correlationMatrixDivs, setCorrelationMatrixDiv] = useState([]);
+  const [avgCorrDiv, setAvgCorrDiv] = useState(null);
   const [boxplotsDiv, setBoxplotsDiv] = useState(null);
   const [candleDivs, setCandlechartDiv] = useState([]);
   const [featuresDivs, setFeaturesDiv] = useState([]);
@@ -30,12 +31,26 @@ const UpperPanel = ({chosen_data}) => {
         return (<PlotFeatureTimeseries features={dataset.features} time={dataset.time}/>);
         });
 
+        const newCorrDivs = chosen_data.map((dataset, index) => {
+          const matrix = analysis.correlation_matrix(dataset.features);
+        return analysis.displayCorrelationMatrix(matrix); // Store the correlation matrix div
+        });
+
+
         setCandlechartDiv(newCandleDivs);
         setFeaturesDiv(newfeaturesDivs);
+        setCorrelationMatrixDiv(newCorrDivs);
+        //setAvgCorrDiv(computeAverageMatrix(newCorrDivs));
+
+
+
+
+        //setBoxplotsDiv(analysis.displayBoxplots(chosen_data))
 
         // Update the state with the new HTML containing the figures
         //setCandlechartDiv();
-        //setCorrelationMatrixDiv(analysis.displayCorrelationMatrix(dataset.features)); // Store the correlation matrix div
+
+
         //setBoxplotsDiv(analysis.displayBoxplots(dataset.features)); // Store the boxplots div
      }
     }
@@ -43,6 +58,30 @@ const UpperPanel = ({chosen_data}) => {
     // Only call fetchData when features or data change
     fetchData();
   }, [chosen_data]); // Now it will re-run when `features`, `data`, or `time` change
+
+  function computeAverageMatrix(correlationMatrixDivs) {
+  const numMatrices = correlationMatrixDivs.length;
+  const numRows = correlationMatrixDivs[0].length;
+  const numCols = correlationMatrixDivs[0][0].length;
+
+  // Create a 2D array initialized with zeros
+  const sumMatrix = Array.from({ length: numRows }, () => Array(numCols).fill(0));
+
+  // Sum all matrices
+  correlationMatrixDivs.forEach(matrix => {
+    for (let i = 0; i < numRows; i++) {
+      for (let j = 0; j < numCols; j++) {
+        sumMatrix[i][j] += matrix[i][j];
+      }
+    }
+  });
+
+  // Compute the average by dividing by the number of matrices
+  const averageMatrix = sumMatrix.map(row => row.map(value => value / numMatrices));
+
+  return averageMatrix;
+}
+
 
   return (
     <div className="bg-gray-700 p-4 shadow-lg rounded-lg flex flex-col">
@@ -85,13 +124,14 @@ const UpperPanel = ({chosen_data}) => {
       </div>
 
     )}{activeTab === 3 && (
-          <div className="bg-gray-800 p-4 rounded-lg overflow-y-auto" style={{ maxHeight: '400px' }}>
+          <div className="#2D3748 p-4 rounded-lg overflow-y-auto" style={{ maxHeight: '400px' }}>
             {/* Display Data Quality content with a scroll bar */}
             <div>
               {/* Correlation Matrix */}
-              <div className="my-4">
-                <h3 className="text-xl text-yellow-400">Correlation Matrix</h3>
-                <div>{correlationMatrixDiv}</div> {/* Inject the correlation matrix content */}
+              <div>
+              {candleDivs.length > 0 ? (correlationMatrixDivs.map((correlationMatrixDiv, index) => (
+                <div key={index}> {correlationMatrixDiv} </div>
+              ))) : (<div>No candlestick divs were generated</div>)}
               </div>
 
 
