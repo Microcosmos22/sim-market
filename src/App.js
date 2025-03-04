@@ -22,67 +22,58 @@ const App = () => {
 
 
   return (
-    <div className="h-screen bg-black text-white flex flex-col overflow-y-auto">
-      {/* Header Bar */}
-      <header className="bg-gray-900 p-4 flex items-center justify-between shadow-md">
-        <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-white text-2xl">
-          <FaBars />
+  <div className="h-screen bg-black text-white flex flex-col overflow-y-auto">
+    {/* Header Bar */}
+    <header className="bg-gray-900 p-4 flex items-center justify-between shadow-md">
+
+
+      {/* Menu Links */}
+      <div className="flex space-x-4">
+        <button onClick={() => setActiveMenu("Dashboard")} className="text-white hover:text-yellow-400 flex items-center gap-2">
+          <FaTachometerAlt /> Dashboard
         </button>
-        <h1 className="text-xl font-bold">Sim Market</h1>
-      </header>
+        <button onClick={() => setActiveMenu("Datasets")} className="text-white hover:text-yellow-400 flex items-center gap-2">
+          <FaDatabase /> Datasets
+        </button>
+        <button onClick={() => setActiveMenu("Training")} className="text-white hover:text-yellow-400 flex items-center gap-2">
+          <FaCogs /> Training
+        </button>
+        <button onClick={() => setActiveMenu("Account")} className="text-white hover:text-yellow-400 flex items-center gap-2">
+          <FaRunning /> Account
+        </button>
+        <button onClick={() => setActiveMenu("Trader Simulation")} className="text-white hover:text-yellow-400 flex items-center gap-2">
+          <FaChartLine /> Trader Simulation
+        </button>
+        <button onClick={() => setActiveMenu("Tracking")} className="text-white hover:text-yellow-400 flex items-center gap-2">
+          <FaClipboardList /> Tracking
+        </button>
+      </div>
+      <h1 className="text-xl font-bold">Sim Market</h1>
+    </header>
 
-      {/* Main Content */}
-      <div className="flex flex-1 overflow-auto">
-        {/* Expandable Menu Panel */}
-        {isMenuOpen && (
-          <motion.div
-            className="bg-gray-800 w-56 p-4 flex flex-col gap-4 overflow-y-auto"
-            initial={{ x: -200 }}
-            animate={{ x: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <button className="text-white hover:text-yellow-400 flex items-center gap-2" onClick={() => setActiveMenu("Dashboard")}>
-              <FaTachometerAlt /> Dashboard
-            </button>
-            <button className="text-white hover:text-yellow-400 flex items-center gap-2" onClick={() => setActiveMenu("Datasets")}>
-              <FaDatabase /> Datasets
-            </button>
-            <button className="text-white hover:text-yellow-400 flex items-center gap-2" onClick={() => setActiveMenu("Training")}>
-              <FaCogs /> Training
-            </button>
-            <button className="text-white hover:text-yellow-400 flex items-center gap-2" onClick={() => setActiveMenu("Account")}>
-              <FaRunning /> Account
-            </button>
-            <button className="text-white hover:text-yellow-400 flex items-center gap-2" onClick={() => setActiveMenu("Trader Simulation")}>
-              <FaChartLine /> Trader Simulation
-            </button>
-            <button className="text-white hover:text-yellow-400 flex items-center gap-2" onClick={() => setActiveMenu("Tracking")}>
-              <FaClipboardList /> Tracking
-            </button>
-          </motion.div>
+    {/* Main Content */}
+    <div className="flex flex-1 overflow-auto">
+      {/* Main Panels */}
+      <div className="flex-1 flex flex-col gap-4 p-4 overflow-y-auto">
+        {activeMenu === "Training" && (
+          <>
+            {/* Upper Panels */}
+            <UpperPanel chosen_data={chosen_data} />
+
+            {/* Left Panels */}
+            <CenterPanel setResponseTrain={setResponseTrain} setChosenData={setChosenData} />
+
+            {/* Right Panel */}
+            <div className="bg-gray-700 p-4 shadow-lg rounded-lg">
+              <BottomPanel response={response_train || { error: [], val: [] }} />
+            </div>
+          </>
         )}
-
-        {/* Main Panels */}
-        <div className="flex-1 flex flex-col gap-4 p-4 overflow-y-auto">
-          {activeMenu === "Training" && (
-            <>
-              {/* Upper Panels */}
-              <UpperPanel chosen_data = {chosen_data} />
-
-              {/* Left Panels */}
-              <CenterPanel setResponseTrain={setResponseTrain} setChosenData={setChosenData} />
-
-
-              {/* Right Panel */}
-              <div className="bg-gray-700 p-4 shadow-lg rounded-lg">
-                <BottomPanel response={response_train || { error: [], val: [] }} />
-              </div>
-            </>
-          )}
-        </div>
       </div>
     </div>
-  );
+  </div>
+);
+
 };
 
 export default App;
