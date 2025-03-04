@@ -65,11 +65,11 @@ function displayCorrelationMatrix(matrix) {
 
   // Determine color based on correlation value
   const getColor = (value) => {
-  
+
   // Define color stops for diverging colormap
-  const negativeColor = [49, 130, 189];  // Blue for negative (-1)
-  const neutralColor = [255, 255, 255];  // White for 0
-  const positiveColor = [222, 45, 38];   // Red for positive (+1)
+  const negativeColor = [222, 45, 38];  // Blue for negative (-1)
+  const neutralColor = [45, 55, 72];  // White for 0
+  const positiveColor = [235, 179, 5];   // Red for positive (+1)
 
   let r, g, b;
 

@@ -41,18 +41,7 @@ const UpperPanel = ({chosen_data}) => {
         setFeaturesDiv(newfeaturesDivs);
         setCorrelationMatrixDiv(newCorrDivs);
         //setAvgCorrDiv(computeAverageMatrix(newCorrDivs));
-
-
-
-
-        //setBoxplotsDiv(analysis.displayBoxplots(chosen_data))
-
-        // Update the state with the new HTML containing the figures
-        //setCandlechartDiv();
-
-
-        //setBoxplotsDiv(analysis.displayBoxplots(dataset.features)); // Store the boxplots div
-     }
+      }
     }
 
     // Only call fetchData when features or data change
@@ -124,7 +113,7 @@ const UpperPanel = ({chosen_data}) => {
       </div>
 
     )}{activeTab === 3 && (
-          <div className="#2D3748 p-4 rounded-lg overflow-y-auto" style={{ maxHeight: '400px' }}>
+          <div className="#2D3748 p-4 rounded-lg overflow-y-auto" style={{ maxHeight: '300px', maxWidth: '600px' }}>
             {/* Display Data Quality content with a scroll bar */}
             <div>
               {/* Correlation Matrix */}
