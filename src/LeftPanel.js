@@ -20,12 +20,7 @@ const LeftPanel = ({setResponseTrain, setChosenData}) => {
   const [response_data, setResponseData] = useState([]);
   const [datasets, setDatasets] = useState([]); // Only the stringname
 
-  const updateSettings = (key, value) => {
-    setNN((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
+
 
   // State for NN layers
 const [layers, setLayers] = useState([
@@ -36,9 +31,9 @@ const [layers, setLayers] = useState([
 const [NN, setNN] = useState({
   lookf: 5,
   lookb: 10,
-  learnRate: 0.001,
-  batchSize: 32,
-  epochs: 10,
+  learnRate: 0.01,
+  batchSize: 64,
+  epochs: 100,
   layers: layers,
 });
 
@@ -56,6 +51,12 @@ const updateLayer = (index, key, value) => {
   }));
 };
 
+const updateSettings = (key, value) => {
+  setNN((prev) => ({
+    ...prev,
+    [key]: value,
+  }));
+};
 
   // Add a new layer
 const addLayer = () => {
@@ -143,6 +144,8 @@ const handleSaveMachineClick = async () => {
 const handleTrainButtonClick = async () => {
   setIsTraining(true); // Indicate training is in progress
 
+  console.log("Training with NN: ", NN);
+
   try {
     const response_train = await api.trainModel(NN, max_tot_return);  // Adjust the URL to your backend endpoint
     setResponseTrain(response_train);
@@ -168,39 +171,24 @@ const handleTrainButtonClick = async () => {
   };
 
   return(
-    <div className="bg-gray-800 p-2 shadow-lg rounded-lg flex flex-col text-xs">
+    <div className="bg-gray-900 p-2 shadow-lg rounded-lg flex flex-col text-xs">
 
       <div className="flex flex-wrap gap-2 mb-2">
         {/* Row 1: First two tabs */}
         <div className="flex-1">
           <Tab
-            label="Datasets"
-            className="text-xs w-full"
-            onClick={() => setActiveTab(0)}
-          />
+            label="Datasets" className="text-xs w-full" onClick={() => setActiveTab(0)} />
         </div>
         <div className="flex-1">
-          <Tab
-            label="Pre-processing"
-            className="text-xs w-full"
-            onClick={() => setActiveTab(1)}
-          />
+          <Tab label="Pre-processing" className="text-xs w-full" onClick={() => setActiveTab(1)} />
         </div>
 
         {/* Row 2: Next two tabs */}
         <div className="flex-1">
-          <Tab
-            label="Hyperparameters"
-            className="text-xs w-full"
-            onClick={() => setActiveTab(2)}
-          />
+          <Tab label="Neural network" className="text-xs w-full" onClick={() => setActiveTab(2)} />
         </div>
         <div className="flex-1">
-          <Tab
-            label="Training"
-            className="text-xs w-full"
-            onClick={() => setActiveTab(3)}
-          />
+          <Tab label="Training" className="text-xs w-full" onClick={() => setActiveTab(3)} />
         </div>
       </div>
       <div className="mt-2">
@@ -209,7 +197,7 @@ const handleTrainButtonClick = async () => {
           <div className="flex flex-wrap gap-2 mb-2">
             {/* First Row - Dropdowns */}
             <div className="w-full sm:w-auto">
-              <select className="bg-gray-800 p-1 rounded text-xs" value={candleLength} onChange={(e) => setCandleLength(e.target.value)}>
+              <select className="bg-gray-800 border border-gray-600 p-1 rounded text-xs" value={candleLength} onChange={(e) => setCandleLength(e.target.value)}>
                 <option>15min</option>
                 <option>1hour</option>
                 <option>4hour</option>
@@ -217,7 +205,7 @@ const handleTrainButtonClick = async () => {
             </div>
 
             <div className="w-full sm:w-auto">
-              <select className="bg-gray-800 p-1 rounded text-xs" value={tradingPair} onChange={(e) => setTradingPair(e.target.value)}>
+              <select className="bg-gray-800 border border-gray-600 p-1 rounded text-xs" value={tradingPair} onChange={(e) => setTradingPair(e.target.value)}>
                 <option>BTCUSD</option>
                 <option>XRPUSD</option>
                 <option>ETHUSD</option>
@@ -227,11 +215,11 @@ const handleTrainButtonClick = async () => {
 
               {/* Second Row - Inputs and Button */}
               <div className="w-full sm:w-auto">
-                <input type="date" className="bg-gray-800 p-1 rounded text-xs border-gray-400" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                <input type="date" className="bg-gray-800 border border-gray-600 p-1 rounded text-xs" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
               </div>
 
               <div className="w-full sm:w-auto">
-                <input type="number" placeholder="Interval Length" className="bg-gray-800 border-gray-400 p-1 rounded text-xs" value={intervalLength} onChange={(e) => setIntervalLength(e.target.value)} />
+                <input type="number" placeholder="Interval Length" className="bg-gray-800 border border-gray-600 p-1 rounded-lg text-xs" value={intervalLength} onChange={(e) => setIntervalLength(e.target.value)} />
               </div>
 
               <div className="w-full sm:w-auto">
@@ -274,7 +262,7 @@ const handleTrainButtonClick = async () => {
                       <span className="text-sm">?</span>
                     </a>
                   </div>
-                  <input id="return-mean" type="number" className="bg-gray-800 mt-1 p-1 rounded w-full text-xs" value={max_tot_return} onChange={(e) => setMax_tot_return(e.target.value)} />
+                  <input id="return-mean" type="number" className="bg-gray-800 border border-gray-600 mt-1 p-1 rounded w-full text-xs" value={max_tot_return} onChange={(e) => setMax_tot_return(e.target.value)} />
                 </div>
               </div>
               <div>Samples after filtering: {1000}</div>
@@ -282,7 +270,7 @@ const handleTrainButtonClick = async () => {
           </div>
         )}
         {activeTab === 2 && (
-            <div className="w-full bg-gray-800 p-2 shadow-lg rounded-lg overflow-auto">
+            <div className="w-full bg-gray-900 p-2 shadow-lg rounded-lg overflow-auto">
               <NeuralNetworkDesigner setNN = {setNN} updateSettings = {updateSettings} updateLayer = {updateLayer}/>
             </div>
 

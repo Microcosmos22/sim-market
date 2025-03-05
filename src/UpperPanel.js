@@ -73,7 +73,7 @@ const UpperPanel = ({chosen_data}) => {
 
 
   return (
-    <div className="bg-gray-800 p-4 shadow-lg rounded-lg flex flex-col">
+    <div className="bg-gray-900 p-4 shadow-lg rounded-lg flex flex-col">
       <Tabs
         value={activeTab}
         onChange={handleTabChange}

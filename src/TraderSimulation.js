@@ -4,7 +4,7 @@ export default function TraderSimulation() {
     const [activeTab, setActiveTab] = useState("strategy");
 
     return (
-        <div className="flex min-h-screen bg-gray-800 text-xs text-white">
+        <div className="flex min-h-screen bg-black text-xs text-white">
             {/* Left Panel */}
             <div className="w-1/6 bg-gray-900 p-2 shadow-lg rounded-lg">
                 <div className="mb-4">

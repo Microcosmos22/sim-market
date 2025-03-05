@@ -40,10 +40,10 @@ const App = () => {
           <TraderSimulation />
         ) : (
           <div className="flex gap-4 flex-1">
-            <div className="w-1/3 bg-gray-800 p-4 shadow-lg rounded-lg">
+            <div className="w-1/3 bg-gray-900 p-4 shadow-lg rounded-lg">
               <LeftPanel setResponseTrain={setResponseTrain} setChosenData={setChosenData} />
             </div>
-            <div className="flex-1 bg-gray-800 p-4 shadow-lg rounded-lg">
+            <div className="flex-1 bg-gray-900 p-4 shadow-lg rounded-lg">
               <UpperPanel chosen_data={chosen_data} />
             </div>
           </div>

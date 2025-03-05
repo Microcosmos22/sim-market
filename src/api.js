@@ -19,27 +19,29 @@ export async function getHistoricalData(startDateOrLastNcandles, tag, candleLeng
 
       if (!response.ok) throw new Error("Failed to fetch historical data");
 
-      return await response.json(); // Return the JSON response
+      return await response.json(); // 
 
 }
 
-export async function trainModel(epochs, lookf, lookb, dropout, learn_rate, layer1, layer2, batch_size, max_total_return) {
+// Updated API request function to pass all layers and settings
+export async function trainModel(NN, max_total_return) {
+    // Flatten the NN object into query parameters
+    const queryString = new URLSearchParams({
+        epochs: NN.epochs,
+        lookf: NN.lookf,
+        lookb: NN.lookb,
+        learn_rate: NN.learnRate,
+        batch_size: NN.batchSize,
+        max_total_return: max_total_return || 100,  // Provide a default if undefined
+        layers: JSON.stringify(NN.layers)  // Serialize layers array as JSON string
+    }).toString();
 
-      const queryString = new URLSearchParams({
-          "epochs": epochs,
-          "lookf": lookf,
-          "lookb": lookb,
-          "dropout": dropout,
-          "learn_rate": learn_rate,
-          "layer1": layer1,
-          "layer2": layer2,
-          "batch_size": batch_size,
-          "max_total_return": max_total_return
-      }).toString();
+    // Construct the URL
+    const url = `http://localhost:5050/api/train_nnmodel?${queryString}`;
 
-      const url = `${API_BASE_URL}/train_nnmodel?${queryString}`;
-      const response = await fetch(url, {method: "GET",});
+    // Send the request
+    const response = await fetch(url, { method: "GET" });
 
-      return await response.json(); // Return the JSON response
-
+    // Return the JSON response
+    return await response.json();
 }
