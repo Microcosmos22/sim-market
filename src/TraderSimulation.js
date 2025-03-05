@@ -1,106 +1,96 @@
-import { Card, CardContent, CardHeader, Button, TextField, Tabs, Tab, Box, Typography } from '@mui/material';
 import { useState } from 'react';
 
 export default function TraderSimulation() {
     const [activeTab, setActiveTab] = useState("strategy");
 
     return (
-        <Box sx={{ display: 'flex', height: '100vh', p: 0, backgroundColor: 'bg-gray-800' }}>
+        <div className="flex min-h-screen bg-gray-800 text-xs text-white">
             {/* Left Panel */}
-            <Card sx={{ width: '16.66%', backgroundColor: 'bg-gray-800' }}>
-                <CardContent sx={{ p: 1 }}>
-                    <Tabs
-                        value={activeTab}
-                        onChange={(event, newValue) => setActiveTab(newValue)}
-                        variant="fullWidth"
-                        textColor="inherit"
-                        sx={{ fontSize: '0.75rem' }}
-                    >
-                        <Tab label="Trader Strategy" value="strategy" />
-                        <Tab label="Machines" value="machines" />
-                    </Tabs>
+            <div className="w-1/6 bg-gray-900 p-2 shadow-lg rounded-lg">
+                <div className="mb-4">
+                    <div className="flex">
+                        <button
+                            onClick={() => setActiveTab("strategy")}
+                            className={`flex-1 py-1 ${activeTab === "strategy" ? "bg-gray-700" : "bg-gray-800"} text-white rounded-t`}
+                        >
+                            Trader Strategy
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("machines")}
+                            className={`flex-1 py-1 ${activeTab === "machines" ? "bg-gray-700" : "bg-gray-800"} text-white rounded-t`}
+                        >
+                            Machines
+                        </button>
+                    </div>
 
                     {activeTab === "strategy" && (
-                        <Box sx={{ mt: 2 }}>
-                            <Box display="flex" justifyContent="space-between" mb={2}>
-                                <Typography variant="body2">Budget</Typography>
-                                <input type="number" placeholder="Interval Length"
-                                className="bg-gray-800 border-gray-400 p-1 rounded text-xs" />
-
-                            </Box>
-                            <Box display="flex" justifyContent="space-between" mb={2}>
-                                <Typography variant="body2">Stiffness</Typography>
-
-                                <input type="number" placeholder="Interval Length"
-                                className="bg-gray-800 border-gray-400 p-1 rounded text-xs" />
-                            </Box>
-                        </Box>
+                        <div className="mt-2 space-y-2">
+                            <div className="flex justify-between items-center">
+                                <label className="text-xs">Budget</label>
+                                <input
+                                    type="number"
+                                    placeholder="Budget"
+                                    className="bg-gray-800 border border-gray-600 p-1 rounded text-xs text-white w-24"
+                                />
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <label className="text-xs">Stiffness</label>
+                                <input
+                                    type="number"
+                                    placeholder="Stiffness"
+                                    className="bg-gray-800 border border-gray-600 p-1 rounded text-xs text-white w-24"
+                                />
+                            </div>
+                        </div>
                     )}
-                </CardContent>
-            </Card>
+                </div>
+            </div>
 
             {/* Center Panel */}
-            <Card sx={{ width: '66.66%', mx: 2, backgroundColor: '#1f1f1f' }}>
-                <CardHeader title="Trader Simulation" sx={{ textAlign: 'center', paddingBottom: 0 }} />
-                <CardContent sx={{ p: 1 }}>
-                    <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 2 }}>
-                        <TextField
+            <div className="w-2/3 bg-gray-900 mx-2 p-2 shadow-lg rounded-lg">
+                <h2 className="text-center text-lg mb-2">Trader Simulation</h2>
+
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                    <div>
+                        <label className="block text-xs mb-1">Ending Date</label>
+                        <input
                             type="date"
-                            variant="outlined"
-                            label="Ending Date"
-                            sx={{ fontSize: '0.75rem' }}
+                            className="bg-gray-800 border border-gray-600 p-1 rounded text-xs text-white w-full"
                         />
-                        <TextField
+                    </div>
+                    <div>
+                        <label className="block text-xs mb-1">Candles Amount</label>
+                        <input
                             type="number"
-                            variant="outlined"
-                            label="Candles Amount"
-                            sx={{ fontSize: '0.75rem' }}
+                            className="bg-gray-800 border border-gray-600 p-1 rounded text-xs text-white w-full"
                         />
-                    </Box>
+                    </div>
+                </div>
 
-                    <Button
-                        variant="outlined"
-                        sx={{ mb: 2, fontSize: '0.75rem', textTransform: 'none' }}
-                    >
-                        Select
-                    </Button>
+                <button className="bg-gray-700 border border-gray-600 px-2 py-1 rounded text-xs mb-4">
+                    Select
+                </button>
 
-                    <Box
-                        sx={{
-                            backgroundColor: '#1f1f1f',
-                            color: 'white',
-                            p: 1,
-                            mb: 2,
-                            borderRadius: 1,
-                            fontSize: '0.75rem'
-                        }}
-                    >
-                        Simulation result will appear here.
-                    </Box>
+                <div className="bg-gray-800 p-2 rounded mb-4 text-xs text-white">
+                    Simulation result will appear here.
+                </div>
 
-                    <button className="bg-yellow-500  p-3 rounded text-xs">Simulate</button>
+                <button className="bg-yellow-500 p-2 rounded text-xs mb-4 text-gray-900">
+                    Simulate
+                </button>
 
-                    <Box
-                        sx={{
-                            backgroundColor: '#1f1f1f',
-                            p: 2,
-                            borderRadius: 1,
-                            height: '240px',
-                            overflowY: 'auto',
-                            color: 'white'
-                        }}
-                    >
-                        Plots area
-                    </Box>
-                </CardContent>
-            </Card>
+                <div className="bg-gray-800 p-2 rounded h-60 overflow-y-auto text-white">
+                    Plots area
+                </div>
+            </div>
 
             {/* Right Panel */}
-            <Card sx={{ width: '16.66%', backgroundColor: '#1f1f1f' }}>
-                <CardContent sx={{ p: 2 }}>
-                    {/* Placeholder for right panel content */}
-                </CardContent>
-            </Card>
-        </Box>
+            <div className="w-1/6 bg-gray-900 p-2 shadow-lg rounded-lg">
+                {/* Placeholder for right panel content */}
+                <div className="text-xs text-gray-400">
+                    Right Panel
+                </div>
+            </div>
+        </div>
     );
 }
