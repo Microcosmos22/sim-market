@@ -5,7 +5,7 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
-    "@mui/material": "^6.4.3",
+    "@mui/material": "^6.4.6",
     "cra-template": "1.2.0",
     "framer-motion": "^12.4.1",
     "plotly.js": "^3.0.1",
@@ -17,6 +17,7 @@
     "react-plotly.js": "^2.6.0",
     "react-scripts": "^5.0.1",
     "recharts": "^2.15.1",
+    "shadcn-ui": "^0.9.5",
     "web-vitals": "^4.2.4"
   },
   "scripts": {

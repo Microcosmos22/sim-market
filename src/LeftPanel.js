@@ -5,17 +5,8 @@ import { FaTachometerAlt, FaDatabase, FaCogs, FaChartLine, FaRunning, FaBars, Fa
 import NeuralNetworkDesigner from './NeuralNetworkDesigner';
 
 
-
 const LeftPanel = ({setResponseTrain, setChosenData}) => {
 
-  const [epochs, setEpochs] = useState(50); // To hold the log data
-  const [lookf, setlookf] = useState(1); // To hold the log data
-  const [lookb, setlookb] = useState(10);
-  const [dropout, setDropout] = useState(0.2);
-  const [learn_rate, setLearnRate] = useState(0.1);
-  const [layer1, setLayer1] = useState(20);
-  const [layer2, setLayer2] = useState(15);
-  const [batchsize, setBatchsize] = useState(64);
   const [max_tot_return, setMax_tot_return] = useState(99999);
   const [activeTab, setActiveTab] = useState(0);
   const [candleLength, setCandleLength] = useState("1hour");
@@ -24,13 +15,73 @@ const LeftPanel = ({setResponseTrain, setChosenData}) => {
   const [selectedIndices, setSelectedIndices] = useState([]); // To track selected checkboxes
   const [intervalLength, setIntervalLength] = useState(1000); // Default value is 10
   const [logs, setLogs] = useState(""); // To hold the log data
-
   const [isTraining, setIsTraining] = useState(false); // To manage the training state
   const [isSaving, setIsSaving] = useState(false); // To manage the training state
-
   const [response_data, setResponseData] = useState([]);
-
   const [datasets, setDatasets] = useState([]); // Only the stringname
+
+  const updateSettings = (key, value) => {
+    setNN((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  // State for NN layers
+const [layers, setLayers] = useState([
+  { neurons: 64, dropout: 0.2, activation: "relu" },
+  { neurons: 64, dropout: 0.2, activation: "relu" },
+]);
+
+const [NN, setNN] = useState({
+  lookf: 5,
+  lookb: 10,
+  learnRate: 0.001,
+  batchSize: 32,
+  epochs: 10,
+  layers: layers,
+});
+
+// Function to update a specific layer
+const updateLayer = (index, key, value) => {
+  setLayers((prevLayers) => {
+    const updatedLayers = prevLayers.map((layer, i) =>
+      i === index ? { ...layer, [key]: value } : layer
+    );
+    return updatedLayers;
+  });
+  setNN((prevNN) => ({
+    ...prevNN,
+    layers: layers,
+  }));
+};
+
+
+  // Add a new layer
+const addLayer = () => {
+  const newLayer = { neurons: 10, dropout: 0.5, activation: "relu" };
+  setLayers((prevLayers) => {
+    if (Array.isArray(prevLayers)) {
+      return [...prevLayers, newLayer]; // Add new layer if prev is an array
+    }
+    return [newLayer]; // If prev isn't an array, initialize with the new layer
+  });
+  setNN(layers); // Update the parent neural network settings
+};
+
+// Handling layer changes
+const handleLayerChange = (index, key, value) => {
+  setLayers((prevLayers) => {
+    if (Array.isArray(prevLayers)) {
+      const updatedLayers = prevLayers.map((layer, i) =>
+        i === index ? { ...layer, [key]: value } : layer
+      );
+      return updatedLayers;
+    }
+    return prevLayers;
+  });
+  updateLayer(index, key, value); // Update the layer in parent component
+};
 
 
   const handleCheckboxChange = (index) => {
@@ -93,7 +144,7 @@ const handleTrainButtonClick = async () => {
   setIsTraining(true); // Indicate training is in progress
 
   try {
-    const response_train = await api.trainModel(epochs, lookf, lookb, dropout, learn_rate, layer1, layer2, batchsize, max_tot_return);  // Adjust the URL to your backend endpoint
+    const response_train = await api.trainModel(NN, max_tot_return);  // Adjust the URL to your backend endpoint
     setResponseTrain(response_train);
     const backendLogs = response_train.log || "";// Ensure it’s a string even if the backend does not return logs
     setLogs(prevLogs => prevLogs + "\n" + "Training machine in the Python Backend: "); // Append the backend logs to the current logs
@@ -119,39 +170,39 @@ const handleTrainButtonClick = async () => {
   return(
     <div className="bg-gray-800 p-2 shadow-lg rounded-lg flex flex-col text-xs">
 
-  <div className="flex flex-wrap gap-2 mb-2">
-    {/* Row 1: First two tabs */}
-    <div className="flex-1">
-      <Tab
-        label="Datasets"
-        className="text-xs w-full"
-        onClick={() => setActiveTab(0)}
-      />
-    </div>
-    <div className="flex-1">
-      <Tab
-        label="Pre-processing"
-        className="text-xs w-full"
-        onClick={() => setActiveTab(1)}
-      />
-    </div>
+      <div className="flex flex-wrap gap-2 mb-2">
+        {/* Row 1: First two tabs */}
+        <div className="flex-1">
+          <Tab
+            label="Datasets"
+            className="text-xs w-full"
+            onClick={() => setActiveTab(0)}
+          />
+        </div>
+        <div className="flex-1">
+          <Tab
+            label="Pre-processing"
+            className="text-xs w-full"
+            onClick={() => setActiveTab(1)}
+          />
+        </div>
 
-    {/* Row 2: Next two tabs */}
-    <div className="flex-1">
-      <Tab
-        label="Hyperparameters"
-        className="text-xs w-full"
-        onClick={() => setActiveTab(2)}
-      />
-    </div>
-    <div className="flex-1">
-      <Tab
-        label="Training"
-        className="text-xs w-full"
-        onClick={() => setActiveTab(3)}
-      />
-    </div>
-  </div>
+        {/* Row 2: Next two tabs */}
+        <div className="flex-1">
+          <Tab
+            label="Hyperparameters"
+            className="text-xs w-full"
+            onClick={() => setActiveTab(2)}
+          />
+        </div>
+        <div className="flex-1">
+          <Tab
+            label="Training"
+            className="text-xs w-full"
+            onClick={() => setActiveTab(3)}
+          />
+        </div>
+      </div>
       <div className="mt-2">
         {activeTab === 0 && (
           <div>
@@ -210,16 +261,6 @@ const handleTrainButtonClick = async () => {
             {/* Column 1 */}
             <div className="p-2">
               <div>Total Candles: {totalCandles}</div>
-              <div className="mt-2 flex space-x-2">
-                <div>
-                  <label htmlFor="x-input" className="block text-xs">Lookback (X):</label>
-                  <input id="x-input" type="number" value={lookb} className="bg-gray-800 mt-1 p-1 rounded w-full text-xs" onChange={(e) => setlookb(e.target.value)} />
-                </div>
-                <div>
-                  <label htmlFor="y-input" className="block text-xs">Lookforward (Y):</label>
-                  <input id="y-input" type="number" value={lookf} className="bg-gray-800 mt-1 p-1 rounded w-full text-xs" onChange={(e) => setlookf(e.target.value)} />
-                </div>
-              </div>
               <div>Samples after slicing: {1000}</div>
             </div>
 
@@ -242,9 +283,9 @@ const handleTrainButtonClick = async () => {
         )}
         {activeTab === 2 && (
             <div className="w-full bg-gray-800 p-2 shadow-lg rounded-lg overflow-auto">
-              <NeuralNetworkDesigner />
+              <NeuralNetworkDesigner setNN = {setNN} updateSettings = {updateSettings} updateLayer = {updateLayer}/>
             </div>
-          
+
         )}
 
         {activeTab === 3 && (
