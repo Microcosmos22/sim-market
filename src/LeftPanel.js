@@ -160,24 +160,35 @@ const handleTrainButtonClick = async () => {
   return (
   <div className="bg-gray-900 p-2 shadow-lg rounded-lg flex flex-col text-xs w-[300px]">
 
-      <div className="flex flex-wrap gap-2 mb-2">
-        {/* Row 1: First two tabs */}
-        <div className="flex-1">
-          <Tab
-            label="Datasets" className="text-xs w-full" onClick={() => setActiveTab(0)} />
-        </div>
-        <div className="flex-1">
-          <Tab label="Pre-processing" className="text-xs w-full" onClick={() => setActiveTab(1)} />
-        </div>
+    <div className="flex flex-wrap gap-2 mb-2">
+  {/* Row 1: First two tabs */}
+  <button
+      onClick={() => setActiveTab(0)}
+      className={`flex-1 py-1 ${activeTab === 0 ? "bg-gray-700" : "bg-gray-800"} text-white rounded-t text-xs`}
+  >
+      Datasets
+  </button>
+  <button
+      onClick={() => setActiveTab(1)}
+      className={`flex-1 py-1 ${activeTab === 1 ? "bg-gray-700" : "bg-gray-800"} text-white rounded-t text-xs`}
+  >
+      Pre-processing
+  </button>
 
-        {/* Row 2: Next two tabs */}
-        <div className="flex-1">
-          <Tab label="Neural network" className="text-xs w-full" onClick={() => setActiveTab(2)} />
-        </div>
-        <div className="flex-1">
-          <Tab label="Training" className="text-xs w-full" onClick={() => setActiveTab(3)} />
-        </div>
-      </div>
+  {/* Row 2: Next two tabs */}
+  <button
+      onClick={() => setActiveTab(2)}
+      className={`flex-1 py-1 ${activeTab === 2 ? "bg-gray-700" : "bg-gray-800"} text-white rounded-t text-xs`}
+  >
+      Neural network
+  </button>
+  <button
+      onClick={() => setActiveTab(3)}
+      className={`flex-1 py-1 ${activeTab === 3 ? "bg-gray-700" : "bg-gray-800"} text-white rounded-t text-xs`}
+  >
+      Training
+  </button>
+  </div>
       <div className="mt-2">
         {activeTab === 0 && (
           <div>
@@ -268,7 +279,7 @@ const handleTrainButtonClick = async () => {
             {/* Train Button */}
             <button
               onClick={handleTrainButtonClick}
-              className="bg-blue-500 text-white p-1 rounded hover:bg-blue-600 disabled:bg-gray-300 text-xs"
+              className="bg-yellow-500 text-white p-1 rounded hover:bg-blue-600 disabled:bg-gray-300 text-xs mr-2"  // Add mr-2 for margin-right
               disabled={isTraining}
             >
               {isTraining ? "Training..." : "Train"}
@@ -276,10 +287,10 @@ const handleTrainButtonClick = async () => {
 
             <button
               onClick={handleSaveMachineClick}
-              className="bg-blue-500 text-white p-1 rounded hover:bg-blue-600 disabled:bg-gray-300 text-xs"
+              className="bg-yellow-500 text-white p-1 rounded hover:bg-blue-600 disabled:bg-gray-300 text-xs"
               disabled={isSaving}
             >
-              {isSaving ? "Saving..." : "Save Machine for Tracking"}
+              {isSaving ? "Saving..." : "Save Machine"}
             </button>
 
             {/* Log Output */}
