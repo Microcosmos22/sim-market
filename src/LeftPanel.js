@@ -20,69 +20,56 @@ const LeftPanel = ({setResponseTrain, setChosenData}) => {
   const [response_data, setResponseData] = useState([]);
   const [datasets, setDatasets] = useState([]); // Only the stringname
 
+  // Centralize State Management Here
+    const [layers, setLayers] = useState([
+      { neurons: 20, dropout: 0.2, activation: "relu" },
+      { neurons: 15, dropout: 0.2, activation: "relu" },
+    ]);
 
+    const [NN, setNN] = useState({
+      lookf: 5,
+      lookb: 10,
+      learnRate: 0.01,
+      batchSize: 64,
+      epochs: 100,
+      layers: layers,
+    });
 
-  // State for NN layers
-const [layers, setLayers] = useState([
-  { neurons: 64, dropout: 0.2, activation: "relu" },
-  { neurons: 64, dropout: 0.2, activation: "relu" },
-]);
-
-const [NN, setNN] = useState({
-  lookf: 5,
-  lookb: 10,
-  learnRate: 0.01,
-  batchSize: 64,
-  epochs: 100,
-  layers: layers,
-});
-
-// Function to update a specific layer
-const updateLayer = (index, key, value) => {
-  setLayers((prevLayers) => {
-    const updatedLayers = prevLayers.map((layer, i) =>
-      i === index ? { ...layer, [key]: value } : layer
-    );
-    return updatedLayers;
-  });
-  setNN((prevNN) => ({
-    ...prevNN,
-    layers: layers,
-  }));
-};
-
-const updateSettings = (key, value) => {
-  setNN((prev) => ({
-    ...prev,
-    [key]: value,
-  }));
-};
-
-  // Add a new layer
-const addLayer = () => {
-  const newLayer = { neurons: 10, dropout: 0.5, activation: "relu" };
-  setLayers((prevLayers) => {
-    if (Array.isArray(prevLayers)) {
-      return [...prevLayers, newLayer]; // Add new layer if prev is an array
-    }
-    return [newLayer]; // If prev isn't an array, initialize with the new layer
-  });
-  setNN(layers); // Update the parent neural network settings
-};
-
-// Handling layer changes
-const handleLayerChange = (index, key, value) => {
-  setLayers((prevLayers) => {
-    if (Array.isArray(prevLayers)) {
-      const updatedLayers = prevLayers.map((layer, i) =>
+    // 🛠️ Update Layer
+    const updateLayer = (index, key, value) => {
+      const updatedLayers = layers.map((layer, i) =>
         i === index ? { ...layer, [key]: value } : layer
       );
-      return updatedLayers;
-    }
-    return prevLayers;
-  });
-  updateLayer(index, key, value); // Update the layer in parent component
-};
+      setLayers(updatedLayers);
+      setNN((prevNN) => ({
+        ...prevNN,
+        layers: updatedLayers, // Correctly update layers
+      }));
+    };
+
+    // 🛠️ Update Settings
+    const updateSettings = (newSettings) => {
+      setNN((prevNN) => ({
+        ...prevNN,
+        ...newSettings, // Merge new settings with existing NN
+      }));
+    };
+
+    // 🛠️ Add New Layer
+    const addLayer = () => {
+      const newLayer = { neurons: 10, dropout: 0.5, activation: "relu" };
+      const updatedLayers = [...layers, newLayer];
+      setLayers(updatedLayers);
+      setNN((prevNN) => ({
+        ...prevNN,
+        layers: updatedLayers, // Update layers in NN
+      }));
+    };
+
+    // 🛠️ Handle Layer Changes
+    const handleLayerChange = (index, key, value) => {
+      updateLayer(index, key, value);
+    };
 
 
   const handleCheckboxChange = (index) => {
@@ -170,8 +157,8 @@ const handleTrainButtonClick = async () => {
     setActiveTab(newValue);
   };
 
-  return(
-    <div className="bg-gray-900 p-2 shadow-lg rounded-lg flex flex-col text-xs">
+  return (
+  <div className="bg-gray-900 p-2 shadow-lg rounded-lg flex flex-col text-xs w-[300px]">
 
       <div className="flex flex-wrap gap-2 mb-2">
         {/* Row 1: First two tabs */}
@@ -271,8 +258,8 @@ const handleTrainButtonClick = async () => {
         )}
         {activeTab === 2 && (
             <div className="w-full bg-gray-900 p-2 shadow-lg rounded-lg overflow-auto">
-              <NeuralNetworkDesigner setNN = {setNN} updateSettings = {updateSettings} updateLayer = {updateLayer}/>
-            </div>
+            <NeuralNetworkDesigner NN={NN} layers={layers} updateLayer={updateLayer}
+              updateSettings={updateSettings} addLayer={addLayer} handleLayerChange={handleLayerChange}/> </div>
 
         )}
 
