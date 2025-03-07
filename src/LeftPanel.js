@@ -5,7 +5,7 @@ import { FaTachometerAlt, FaDatabase, FaCogs, FaChartLine, FaRunning, FaBars, Fa
 import NeuralNetworkDesigner from './NeuralNetworkDesigner';
 
 
-const LeftPanel = ({setResponseTrain, setChosenData}) => {
+const LeftPanel = ({setResponseTrain, setChosenData, setChosenDataStrings}) => {
 
   const [max_tot_return, setMax_tot_return] = useState(99999);
   const [activeTab, setActiveTab] = useState(0);
@@ -17,8 +17,9 @@ const LeftPanel = ({setResponseTrain, setChosenData}) => {
   const [logs, setLogs] = useState(""); // To hold the log data
   const [isTraining, setIsTraining] = useState(false); // To manage the training state
   const [isSaving, setIsSaving] = useState(false); // To manage the training state
+
   const [response_data, setResponseData] = useState([]);
-  const [datasets, setDatasets] = useState([]); // Only the stringname
+  const [datasetStrings, setDatasetsStrings] = useState([]); // Only the stringname
 
   // Centralize State Management Here
     const [layers, setLayers] = useState([
@@ -27,6 +28,7 @@ const LeftPanel = ({setResponseTrain, setChosenData}) => {
     ]);
 
     const [NN, setNN] = useState({
+      candleLength: {candleLength},
       lookf: 5,
       lookb: 10,
       learnRate: 0.01,
@@ -73,6 +75,7 @@ const LeftPanel = ({setResponseTrain, setChosenData}) => {
 
 
   const handleCheckboxChange = (index) => {
+    /* Sets selected indices, sets actually data that was chosen, should also set a list of strings */
      setSelectedIndices((prevSelectedIndices) => {
        const newSelectedIndices = prevSelectedIndices.includes(index)
          ? prevSelectedIndices.filter((i) => i !== index) // Deselect
@@ -80,38 +83,43 @@ const LeftPanel = ({setResponseTrain, setChosenData}) => {
 
        const newSelectedDatasets = newSelectedIndices.map(i => response_data[i]);
        setChosenData(newSelectedDatasets); // Update the actual datasets
+
+       const newSelectedDatasetsStrings = newSelectedIndices.map(i => datasetStrings[i]);
+       setChosenDataStrings(newSelectedDatasetsStrings); // Update the actual datasets
+
+
        return newSelectedIndices;
      });
    };
 
 
    useEffect(() => {
-     console.log(`N Datasets generated: ${response_data.length}`);
+      console.log(`N Datasets generated: ${response_data.length}`);
    }, [response_data]); // Only runs when response_data changes
 
    useEffect(() => {
-     console.log('Selected Indices:', selectedIndices);
+      console.log('Selected Indices:', selectedIndices);
    }, [selectedIndices]);
 
 
   const addDataset = async () => {
-    if (!endDate || !intervalLength) return;
-    let formattedEndDate = endDate + " 00:00:00";
+      if (!endDate || !intervalLength) return;
+      let formattedEndDate = endDate + " 00:00:00";
 
-    try {
-      // The API response will be used for plotting. Further calculations continue
-      // with python and the server-saved Datasets.
-      // The datasets will be preserved for each logging session and deleted after.
+      try {
+        // The API response will be used for plotting. Further calculations continue
+        // with python and the server-saved Datasets.
+        // The datasets will be preserved for each logging session and deleted after.
 
-      const response_api = await api.getHistoricalData([formattedEndDate, intervalLength], tradingPair, candleLength);
-      const datasetString = `${candleLength}_${tradingPair}_${endDate}_${intervalLength}`;
+        const response_api = await api.getHistoricalData([formattedEndDate, intervalLength], tradingPair, candleLength);
+        const datasetString = response_api.targetString;
 
-      setDatasets(prev => [...prev, datasetString]);
-      setResponseData(prev => [...prev, {target: response_api.target, features: response_api.features, data: response_api.data, time: response_api.timestamps, tradingPair: tradingPair}])
+        setDatasetsStrings(prev => [...prev, datasetString]);
+        setResponseData(prev => [...prev, {target: response_api.target, features: response_api.features, data: response_api.data, time: response_api.timestamps, tradingPair: tradingPair}])
 
 
-    } catch (error) {
-      console.error("Error fetching historical data:", error);
+      } catch (error) {
+        console.error("Error fetching historical data:", error);
     }};
 
 
@@ -134,7 +142,7 @@ const handleTrainButtonClick = async () => {
   console.log("Training with NN: ", NN);
 
   try {
-    const response_train = await api.trainModel(NN, max_tot_return);  // Adjust the URL to your backend endpoint
+    const response_train = await api.trainModel(NN, datasetStrings, max_tot_return);  // Adjust the URL to your backend endpoint
     setResponseTrain(response_train);
     const backendLogs = response_train.log || "";// Ensure it’s a string even if the backend does not return logs
     setLogs(prevLogs => prevLogs + "\n" + "Training machine in the Python Backend: "); // Append the backend logs to the current logs
@@ -145,10 +153,10 @@ const handleTrainButtonClick = async () => {
   }};
 
   const removeDataset = (index) => {
-    setDatasets(datasets.filter((_, i) => i !== index));
+    setDatasetsStrings(datasetStrings.filter((_, i) => i !== index));
   };
 
-  const totalCandles = datasets.reduce((sum, dataset) => {
+  const totalCandles = datasetStrings.reduce((sum, dataset) => {
     const parts = dataset.split("_");
     return sum + parseInt(parts[3], 10);
   }, 0);
@@ -230,7 +238,7 @@ const handleTrainButtonClick = async () => {
               <span className="text-yellow-400 text-xs">Total Candles: {totalCandles}</span>
             </div>
             <div className="bg-gray-900 p-2 rounded overflow-y-auto max-h-40 text-xs">
-              {datasets.map((dataset, index) => (
+              {datasetStrings.map((dataset, index) => (
                 <div key={index} className="p-1 border-b border-gray-700 flex justify-between items-center">
                   <span>{dataset}</span>
                   <input type="checkbox" checked={selectedIndices.includes(index)} onChange={() => handleCheckboxChange(index)} className="ml-1" />

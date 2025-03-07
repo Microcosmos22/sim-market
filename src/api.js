@@ -19,21 +19,23 @@ export async function getHistoricalData(startDateOrLastNcandles, tag, candleLeng
 
       if (!response.ok) throw new Error("Failed to fetch historical data");
 
-      return await response.json(); // 
+      return await response.json();
 
 }
 
 // Updated API request function to pass all layers and settings
-export async function trainModel(NN, max_total_return) {
+export async function trainModel(NN, datasetStrings, max_total_return) {
     // Flatten the NN object into query parameters
     const queryString = new URLSearchParams({
+        candle_length: NN.candle_length,
         epochs: NN.epochs,
         lookf: NN.lookf,
         lookb: NN.lookb,
         learn_rate: NN.learnRate,
         batch_size: NN.batchSize,
         max_total_return: max_total_return || 100,  // Provide a default if undefined
-        layers: JSON.stringify(NN.layers)  // Serialize layers array as JSON string
+        layers: JSON.stringify(NN.layers),  // Serialize layers array as JSON string
+        target_strings: datasetStrings.join(','),  // Join the dataset strings with commas
     }).toString();
 
     // Construct the URL

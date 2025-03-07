@@ -15,6 +15,8 @@ const App = () => {
   const [response_train, setResponseTrain] = useState([]);
   const [chosen_data, setChosenData] = useState([]);
 
+  const [chosen_datastrings, setChosenDataStrings] = useState([]);
+
   return (
     <div className="h-screen bg-black text-white flex flex-col overflow-y-auto">
       <header className="bg-gray-900 p-4 flex items-center justify-between shadow-md">
@@ -41,7 +43,7 @@ const App = () => {
         ) : (
           <div className="flex gap-4 flex-1">
             <div className="w-[330px] bg-gray-900 p-4 shadow-lg rounded-lg">
-              <LeftPanel setResponseTrain={setResponseTrain} setChosenData={setChosenData} />
+              <LeftPanel setResponseTrain={setResponseTrain} setChosenData={setChosenData} setChosenDataStrings = {setChosenDataStrings} />
             </div>
             <div className="flex-1 bg-gray-900 p-4 shadow-lg rounded-lg">
               <UpperPanel chosen_data={chosen_data} />
