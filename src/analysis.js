@@ -10,7 +10,6 @@ function correlation_matrix(features) {
     const n = features[0].length;
     let correlationMatrix = [];
 
-    console.log("looping until n", n);
 
     // Compute correlation between each pair of features
     for (let i = 0; i < n; i++) {
@@ -23,8 +22,6 @@ function correlation_matrix(features) {
       }
       correlationMatrix.push(row);
     }
-
-    console.log("correlation matrix", correlationMatrix)
     return correlationMatrix;
   }}
 

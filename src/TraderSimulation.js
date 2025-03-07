@@ -1,7 +1,45 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-export default function TraderSimulation() {
+export default function TraderSimulation({machines, setMachines, datasetStrings}) {
     const [activeTab, setActiveTab] = useState("strategy");
+
+    const [filteredMachines, setFilteredMachines] = useState([]); // To store the filtered list based on candle length
+    const [selectedCandleLength, setSelectedCandleLength] = useState(""); // Default selected candle length
+
+
+
+    useEffect(() => {
+        // Fetch the list of machines from your backend (TradeBot/machines)
+        const fetchMachines = async () => {
+          try {
+            const response = await fetch('/api/machines'); // Assuming you have an endpoint to fetch machines
+            const data = await response.json();
+            setMachines(data); // Set the fetched machines to state
+            filterMachines(data, selectedCandleLength); // Filter them by candle length
+          } catch (error) {
+            console.error('Error fetching machines:', error);
+          }
+        };
+
+        fetchMachines();
+    }, []); // This effect runs once when the component is mounted
+
+    useEffect(() => {
+        filterMachines(machines, selectedCandleLength);
+    }, [machines, selectedCandleLength]);
+
+    // Function to filter machines based on selected candle length
+    const filterMachines = (machines, candleLength) => {
+        const filtered = machines.filter(machine => machine.includes(candleLength));
+        setFilteredMachines(filtered); // Update the state with the filtered machines
+    };
+
+      // Handle the candle length change from the dropdown
+    const handleCandleLengthChange = (event) => {
+        const selectedLength = event.target.value;
+        setSelectedCandleLength(selectedLength); // Update the selected candle length
+        filterMachines(machines, selectedLength); // Re-filter the machines based on the new selection
+      };
 
     return (
         <div className="flex min-h-screen bg-black text-xs text-white">
@@ -42,7 +80,32 @@ export default function TraderSimulation() {
                                 />
                             </div>
                         </div>
-                    )}
+                      )}{activeTab === "machines" && (
+                            <div className="p-4">
+                                {/* Dropdown für Candlelengths */}
+                                <label className="block mb-2 text-sm font-medium text-white">Filter machines with candleLength:</label>
+                                <select
+                                    className="bg-gray-800 text-white p-1 rounded mb-4"
+                                    value={selectedCandleLength}
+                                    onChange={(e) => setSelectedCandleLength(e.target.value)}
+                                >
+                                    <option value="">Show all</option>
+                                    <option value="1sec">1s</option>
+                                    <option value="15min">15m</option>
+                                    <option value="1hour">1h</option>
+                                    <option value="4hour">4h</option>
+                                </select>
+
+                                {/* Gefilterte Maschinen anzeigen */}
+                                <div className="mt-4">
+                                    {filteredMachines.map((machine, index) => (
+                                        <div key={index} className="bg-gray-800 text-white p-2 rounded mb-2">
+                                            {machine}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                 </div>
             </div>
 

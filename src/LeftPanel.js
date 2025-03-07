@@ -5,7 +5,7 @@ import { FaTachometerAlt, FaDatabase, FaCogs, FaChartLine, FaRunning, FaBars, Fa
 import NeuralNetworkDesigner from './NeuralNetworkDesigner';
 
 
-const LeftPanel = ({setResponseTrain, setChosenData, setChosenDataStrings}) => {
+const LeftPanel = ({response_data, setResponseData, datasetStrings, setDatasetsStrings, setResponseTrain, setChosenData, setChosenDataStrings}) => {
 
   const [max_tot_return, setMax_tot_return] = useState(99999);
   const [activeTab, setActiveTab] = useState(0);
@@ -18,8 +18,6 @@ const LeftPanel = ({setResponseTrain, setChosenData, setChosenDataStrings}) => {
   const [isTraining, setIsTraining] = useState(false); // To manage the training state
   const [isSaving, setIsSaving] = useState(false); // To manage the training state
 
-  const [response_data, setResponseData] = useState([]);
-  const [datasetStrings, setDatasetsStrings] = useState([]); // Only the stringname
 
   // Centralize State Management Here
     const [layers, setLayers] = useState([

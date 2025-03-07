@@ -13,9 +13,21 @@ const App = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(true); // Default menu expanded
   const [activeMenu, setActiveMenu] = useState("Training");
   const [response_train, setResponseTrain] = useState([]);
-  const [chosen_data, setChosenData] = useState([]);
 
+  const [chosen_data, setChosenData] = useState([]);
   const [chosen_datastrings, setChosenDataStrings] = useState([]);
+
+  const [response_data, setResponseData] = useState([]);
+  const [datasetStrings, setDatasetsStrings] = useState([]); // Only the stringname
+
+  const [machines, setMachines] = useState([]); // To store the list of machines
+
+
+  useEffect(() => {
+    // This will run every time chosen_dataStrings changes
+    console.log('chosen_dataStrings has been updated:', chosen_datastrings);
+  }, [chosen_datastrings]);
+
 
   return (
     <div className="h-screen bg-black text-white flex flex-col overflow-y-auto">
@@ -39,11 +51,11 @@ const App = () => {
 
       <div className="flex flex-1 flex-col p-4 gap-4 overflow-auto">
         {activeMenu === "Trader Simulation" ? (
-          <TraderSimulation />
+          <TraderSimulation machines = {machines} setMachines = {setMachines} datasetStrings = {datasetStrings}/>
         ) : (
           <div className="flex gap-4 flex-1">
             <div className="w-[330px] bg-gray-900 p-4 shadow-lg rounded-lg">
-              <LeftPanel setResponseTrain={setResponseTrain} setChosenData={setChosenData} setChosenDataStrings = {setChosenDataStrings} />
+              <LeftPanel response_data = {response_data} setResponseData = {setResponseData} datasetStrings = {datasetStrings} setDatasetsStrings = {setDatasetsStrings} setResponseTrain={setResponseTrain} setChosenData={setChosenData} setChosenDataStrings = {setChosenDataStrings} />
             </div>
             <div className="flex-1 bg-gray-900 p-4 shadow-lg rounded-lg">
               <UpperPanel chosen_data={chosen_data} />

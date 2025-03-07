@@ -1,6 +1,19 @@
 // src/api.js
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "https://v2202501113287307394.goodsrv.de/api";
 
+const fetchMachines = async () => {
+
+    const url = `${API_BASE_URL}/machines`;
+    const response = await fetch(url, {method: "GET"});
+
+    if (!response.ok) throw new Error("Failed to fetch machine names");
+
+    const machineStrings = await response.json(); // Parse the JSON response
+    console.log("Calling  machine names"); // You can use the machineStrings here
+    return machineStrings; // Return the list of machine filenames
+
+};
+
 export async function getHistoricalData(startDateOrLastNcandles, tag, candleLength) {
 
       console.log(startDateOrLastNcandles);
@@ -23,10 +36,9 @@ export async function getHistoricalData(startDateOrLastNcandles, tag, candleLeng
 
 }
 
-// Updated API request function to pass all layers and settings
 export async function trainModel(NN, datasetStrings, max_total_return) {
-    // Flatten the NN object into query parameters
-    const queryString = new URLSearchParams({
+    // Construct the query parameters using URLSearchParams
+    const params = new URLSearchParams({
         candle_length: NN.candle_length,
         epochs: NN.epochs,
         lookf: NN.lookf,
@@ -35,11 +47,15 @@ export async function trainModel(NN, datasetStrings, max_total_return) {
         batch_size: NN.batchSize,
         max_total_return: max_total_return || 100,  // Provide a default if undefined
         layers: JSON.stringify(NN.layers),  // Serialize layers array as JSON string
-        target_strings: datasetStrings.join(','),  // Join the dataset strings with commas
-    }).toString();
+    });
 
-    // Construct the URL
-    const url = `http://localhost:5050/api/train_nnmodel?${queryString}`;
+    // Append each dataset string as a separate `target_strings` parameter
+    datasetStrings.forEach((datasetString) => {
+        params.append('target_strings', datasetString);
+    });
+
+    // Construct the final URL
+    const url = `http://localhost:5050/api/train_nnmodel?${params.toString()}`;
 
     // Send the request
     const response = await fetch(url, { method: "GET" });
