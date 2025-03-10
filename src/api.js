@@ -1,5 +1,5 @@
 // src/api.js
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "https://v2202501113287307394.goodsrv.de/api";
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "https://v2202501113287307394.goodsrv.de";
 
 const fetchMachines = async () => {
 
@@ -26,7 +26,7 @@ export async function getHistoricalData(startDateOrLastNcandles, tag, candleLeng
       }).toString();
 
       // URL with query string
-      const url = `http://localhost:5050/api/get_historical_data?${params}`;
+      const url = `${API_BASE_URL}/api/get_historical_data?${params}`;
 
       const response = await fetch(url, {method: "GET"});
 
@@ -55,7 +55,7 @@ export async function trainModel(NN, datasetStrings, max_total_return) {
     });
 
     // Construct the final URL
-    const url = `http://localhost:5050/api/train_nnmodel?${params.toString()}`;
+    const url = `${API_BASE_URL}/api/train_nnmodel?${params.toString()}`;
 
     // Send the request
     const response = await fetch(url, { method: "GET" });
