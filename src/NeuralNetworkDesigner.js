@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import layerimgtext from './assets/in_features_text_layer.png';  // Adjust path based on file location
 import layerimg from './assets/in_layer.png'
 
-const NeuralNetworkDesigner = ({ NN, layers, updateLayer, updateSettings, addLayer, handleLayerChange }) => {
+const NeuralNetworkDesigner = ({ NN, deleteLayer, layers, updateLayer, updateSettings, addLayer, handleLayerChange }) => {
 
   // 🟢 Handle adding a new layer
   const handleAddLayer = () => {
@@ -11,10 +11,10 @@ const NeuralNetworkDesigner = ({ NN, layers, updateLayer, updateSettings, addLay
   };
 
   // ❌ Handle deletion of a layer
-  const handleDeleteLayer = (index) => {
-    const updatedLayers = layers.filter((_, i) => i !== index);
-    updateSettings({ layers: updatedLayers });  // Update layers using parent's setter
-  };
+const handleDeleteLayer = (index) => {
+  deleteLayer(index);  // Call the deleteLayer function from props
+};
+
 
   // ⚙️ Handle settings changes (learn rate, batch size, epochs)
   const handleSettingsChange = (key, value) => {

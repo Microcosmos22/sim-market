@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Tabs, Tab } from '@mui/material';
-import { motion } from 'framer-motion';
-import { FaTachometerAlt, FaDatabase, FaCogs, FaChartLine, FaRunning, FaBars, FaClipboardList, FaTimes } from 'react-icons/fa';
+import { FaTachometerAlt, FaCogs, FaChartLine, FaClipboardList } from 'react-icons/fa';
 import * as api from "./api"; // Import all API functions
 import BottomPanel from "./BottomPanel";
-import Plotly from 'plotly.js-dist';
 import UpperPanel from './UpperPanel'; // Adjust the path if needed
 import LeftPanel from './LeftPanel'; // Adjust the path if needed
 import TraderSimulation from './TraderSimulation'; // Import TraderSimulation
@@ -17,10 +14,9 @@ const App = () => {
   const [chosen_data, setChosenData] = useState([]);
   const [chosen_datastrings, setChosenDataStrings] = useState([]);
 
-  const [response_data, setResponseData] = useState([]);
   const [datasetStrings, setDatasetsStrings] = useState([]); // Only the stringname
 
-  const [machines, setMachines] = useState([]); // To store the list of machines
+  const [machines4sim, setMachines4sim] = useState({ machines: [], scalers: [] }); // Initialize with empty lists for "machines" and "scalers"
 
 
   useEffect(() => {
@@ -51,11 +47,22 @@ const App = () => {
 
       <div className="flex flex-1 flex-col p-4 gap-4 overflow-auto">
         {activeMenu === "Trader Simulation" ? (
-          <TraderSimulation machines = {machines} setMachines = {setMachines} datasetStrings = {datasetStrings}/>
-        ) : (
+          <TraderSimulation
+            machines4sim={machines4sim}
+            datasetStrings={datasetStrings}
+          />
+            ) : (
           <div className="flex gap-4 flex-1">
             <div className="w-[330px] bg-gray-900 p-4 shadow-lg rounded-lg">
-              <LeftPanel response_data = {response_data} setResponseData = {setResponseData} datasetStrings = {datasetStrings} setDatasetsStrings = {setDatasetsStrings} setResponseTrain={setResponseTrain} setChosenData={setChosenData} setChosenDataStrings = {setChosenDataStrings} />
+            <LeftPanel
+              machines4sim = {machines4sim}
+              setMachines4sim={setMachines4sim}
+              datasetStrings={datasetStrings}
+              setDatasetsStrings={setDatasetsStrings}
+              setResponseTrain={setResponseTrain}
+              setChosenData={setChosenData}
+              setChosenDataStrings={setChosenDataStrings}
+              />
             </div>
             <div className="flex-1 bg-gray-900 p-4 shadow-lg rounded-lg">
               <UpperPanel chosen_data={chosen_data} />

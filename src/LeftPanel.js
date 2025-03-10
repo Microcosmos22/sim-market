@@ -5,7 +5,7 @@ import { FaTachometerAlt, FaDatabase, FaCogs, FaChartLine, FaRunning, FaBars, Fa
 import NeuralNetworkDesigner from './NeuralNetworkDesigner';
 
 
-const LeftPanel = ({response_data, setResponseData, datasetStrings, setDatasetsStrings, setResponseTrain, setChosenData, setChosenDataStrings}) => {
+const LeftPanel = ({machines4sim, setMachines4sim, datasetStrings, setDatasetsStrings, setResponseTrain, setChosenData, setChosenDataStrings}) => {
 
   const [max_tot_return, setMax_tot_return] = useState(99999);
   const [activeTab, setActiveTab] = useState(0);
@@ -17,6 +17,8 @@ const LeftPanel = ({response_data, setResponseData, datasetStrings, setDatasetsS
   const [logs, setLogs] = useState(""); // To hold the log data
   const [isTraining, setIsTraining] = useState(false); // To manage the training state
   const [isSaving, setIsSaving] = useState(false); // To manage the training state
+
+  const [response_data, setResponseData] = useState([]);
 
 
   // Centralize State Management Here
@@ -35,6 +37,65 @@ const LeftPanel = ({response_data, setResponseData, datasetStrings, setDatasetsS
       layers: layers,
     });
 
+  const findallsubstrings = (beforestring, stringend) => {
+
+      const substrings = [];
+      let startIndex = 0;
+
+      while (true) {
+          // Find the next "saving model" after the last found index
+          const startmachine = logs.indexOf(beforestring, startIndex);
+          if (startmachine === -1) break;  // No more occurrences
+
+          // Find the next ".h5" after this "saving model"
+          const endmachine = logs.indexOf(stringend, startmachine);
+          if (endmachine === -1) break;  // No more .h5 found
+
+          // Extract substring between "saving model " and ".h5"
+          const found_substr = logs.substring(startmachine + beforestring.length, endmachine + 3);  // +3 to include ".h5"
+          substrings.push(found_substr);
+
+          // Update startIndex to continue searching after the current ".h5"
+          startIndex = endmachine + 3;  // Move past the current ".h5"
+      }
+      return substrings;
+    }
+
+    const handleRetrieveMachineClick = async () => {
+        try {
+
+            const machineMatches = findallsubstrings("saving model", ".h5");
+            const scalerMatches = findallsubstrings("and scaler", ".pkl");
+
+            if (machineMatches.length > 0) {
+                // Get the last found machine path
+                const lastMachineMatch = machineMatches.at(-1);  // .at(-1) gets the last item safely
+                const lastScalerMatch = scalerMatches.at(-1);  // .at(-1) gets the last item safely
+
+                console.log("Last Machine Match:", lastMachineMatch);
+                console.log("Last Scaler Match:", lastScalerMatch);
+
+                // Use the prop version of setMachine4sim to update state
+                setMachines4sim((prevData) => {
+                    const newState = {
+                        ...prevData,
+                        machines: Array.isArray(lastMachineMatch) ? [...prevData.machines, ...lastMachineMatch] : [...prevData.machines, lastMachineMatch],
+                        scalers: Array.isArray(lastScalerMatch) ? [...prevData.scalers, ...lastScalerMatch] : [...prevData.scalers, lastScalerMatch],
+                    };
+                    console.log("Updated Machines4Sim:", newState);
+                    return newState;
+                });
+
+
+                console.log(machines4sim)
+
+            }
+        } catch (error) {
+            console.error("Error retrieving machine names:", error);
+        }
+    };
+
+
     // 🛠️ Update Layer
     const updateLayer = (index, key, value) => {
       const updatedLayers = layers.map((layer, i) =>
@@ -44,6 +105,16 @@ const LeftPanel = ({response_data, setResponseData, datasetStrings, setDatasetsS
       setNN((prevNN) => ({
         ...prevNN,
         layers: updatedLayers, // Correctly update layers
+      }));
+    };
+
+    // 🛠️ Delete Layer
+    const deleteLayer = (index) => {
+      const updatedLayers = layers.filter((_, i) => i !== index); // Remove the layer at index
+      setLayers(updatedLayers); // Update the state with the new layers
+      setNN((prevNN) => ({
+        ...prevNN,
+        layers: updatedLayers, // Update the layers in the parent state
       }));
     };
 
@@ -275,7 +346,7 @@ const handleTrainButtonClick = async () => {
         )}
         {activeTab === 2 && (
             <div className="w-full bg-gray-900 p-2 shadow-lg rounded-lg overflow-auto">
-            <NeuralNetworkDesigner NN={NN} layers={layers} updateLayer={updateLayer}
+            <NeuralNetworkDesigner NN={NN} deleteLayer = {deleteLayer} layers={layers} updateLayer={updateLayer}
               updateSettings={updateSettings} addLayer={addLayer} handleLayerChange={handleLayerChange}/> </div>
 
         )}
@@ -285,18 +356,19 @@ const handleTrainButtonClick = async () => {
             {/* Train Button */}
             <button
               onClick={handleTrainButtonClick}
-              className="bg-yellow-500 text-white p-1 rounded hover:bg-blue-600 disabled:bg-gray-300 text-xs mr-2"  // Add mr-2 for margin-right
-              disabled={isTraining}
+              className="bg-yellow-500 text-white p-1 rounded hover:bg-blue-600 disabled:bg-gray-300 text-xs mr-2"
+              disabled={isTraining}  // Fixed: Using isTraining instead of isSaving
             >
               {isTraining ? "Training..." : "Train"}
             </button>
 
+            {/* Retrieve Latest Machine Button */}
             <button
-              onClick={handleSaveMachineClick}
-              className="bg-yellow-500 text-white p-1 rounded hover:bg-blue-600 disabled:bg-gray-300 text-xs"
-              disabled={isSaving}
+              onClick={handleRetrieveMachineClick}
+              className="bg-yellow-500 text-white p-1 rounded hover:bg-blue-600 disabled:bg-gray-300 text-xs mr-2"
+              disabled={isSaving}  // Kept isSaving here as it makes sense
             >
-              {isSaving ? "Saving..." : "Save Machine"}
+              {isSaving ? "Saving..." : "Retrieve Latest Machine"}
             </button>
 
             {/* Log Output */}
@@ -310,13 +382,32 @@ const handleTrainButtonClick = async () => {
                 placeholder="Logs will be displayed here..."
               />
             </div>
+
+            {/* Saved Machines List */}
+            <div className="mt-4">
+              <h3 className="text-xs font-bold mb-1">Saved Machines:</h3>
+              <div className="bg-gray-900 p-2 rounded text-xs max-h-32 overflow-y-auto">
+                {machines4sim?.machines?.length > 0 ? (
+                  <div className="flex flex-col space-y-2">
+                    {machines4sim.machines.map((machine, index) => (
+                      <div key={index} className="bg-gray-800 px-2 py-1 rounded">
+                        {machine}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-gray-500">No saved machines found.</div>
+                )}
+              </div>
+            </div>
+
+
+
           </div>
         )}
       </div>
     </div>
   );
-
-
 };
 
 export default LeftPanel;

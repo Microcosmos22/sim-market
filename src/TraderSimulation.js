@@ -1,45 +1,32 @@
 import React, { useState, useEffect } from 'react';
 
-export default function TraderSimulation({machines, setMachines, datasetStrings}) {
+export default function TraderSimulation({ machines4sim, datasetStrings }) {
     const [activeTab, setActiveTab] = useState("strategy");
+    const [filteredMachines, setFilteredMachines] = useState([]);  // Filtered list based on candle length
+    const [selectedCandleLength, setSelectedCandleLength] = useState("");  // Selected candle length
 
-    const [filteredMachines, setFilteredMachines] = useState([]); // To store the filtered list based on candle length
-    const [selectedCandleLength, setSelectedCandleLength] = useState(""); // Default selected candle length
-
-
-
+    // Automatically update machines when machines4sim changes
     useEffect(() => {
-        // Fetch the list of machines from your backend (TradeBot/machines)
-        const fetchMachines = async () => {
-          try {
-            const response = await fetch('/api/machines'); // Assuming you have an endpoint to fetch machines
-            const data = await response.json();
-            setMachines(data); // Set the fetched machines to state
-            filterMachines(data, selectedCandleLength); // Filter them by candle length
-          } catch (error) {
-            console.error('Error fetching machines:', error);
-          }
-        };
-
-        fetchMachines();
-    }, []); // This effect runs once when the component is mounted
-
-    useEffect(() => {
-        filterMachines(machines, selectedCandleLength);
-    }, [machines, selectedCandleLength]);
+        if (machines4sim) {
+            filterMachines(machines4sim.machines, selectedCandleLength);  // Filter based on candle length
+        }
+    }, [machines4sim, selectedCandleLength]);
 
     // Function to filter machines based on selected candle length
     const filterMachines = (machines, candleLength) => {
-        const filtered = machines.filter(machine => machine.includes(candleLength));
-        setFilteredMachines(filtered); // Update the state with the filtered machines
+        if (candleLength) {
+            const filtered = machines.filter(machine => machine.includes(candleLength));
+            setFilteredMachines(filtered);  // Update the state with the filtered machines
+        } else {
+            setFilteredMachines(machines);  // Show all machines if no filter is selected
+        }
     };
 
-      // Handle the candle length change from the dropdown
+    // Handle candle length selection
     const handleCandleLengthChange = (event) => {
         const selectedLength = event.target.value;
-        setSelectedCandleLength(selectedLength); // Update the selected candle length
-        filterMachines(machines, selectedLength); // Re-filter the machines based on the new selection
-      };
+        setSelectedCandleLength(selectedLength);  // Update the selected candle length
+    };
 
     return (
         <div className="flex min-h-screen bg-black text-xs text-white">
@@ -80,39 +67,40 @@ export default function TraderSimulation({machines, setMachines, datasetStrings}
                                 />
                             </div>
                         </div>
-                      )}{activeTab === "machines" && (
-                            <div className="p-4">
-                                {/* Dropdown für Candlelengths */}
-                                <label className="block mb-2 text-sm font-medium text-white">Filter machines with candleLength:</label>
-                                <select
-                                    className="bg-gray-800 text-white p-1 rounded mb-4"
-                                    value={selectedCandleLength}
-                                    onChange={(e) => setSelectedCandleLength(e.target.value)}
-                                >
-                                    <option value="">Show all</option>
-                                    <option value="1sec">1s</option>
-                                    <option value="15min">15m</option>
-                                    <option value="1hour">1h</option>
-                                    <option value="4hour">4h</option>
-                                </select>
+                    )}
 
-                                {/* Gefilterte Maschinen anzeigen */}
-                                <div className="mt-4">
-                                    {filteredMachines.map((machine, index) => (
-                                        <div key={index} className="bg-gray-800 text-white p-2 rounded mb-2">
-                                            {machine}
-                                        </div>
-                                    ))}
-                                </div>
+                    {activeTab === "machines" && (
+                        <div className="p-4">
+                            {/* Dropdown for Candle Lengths */}
+                            <label className="block mb-2 text-sm font-medium text-white">Filter machines by candle length:</label>
+                            <select
+                                className="bg-gray-800 text-white p-1 rounded mb-4"
+                                value={selectedCandleLength}
+                                onChange={handleCandleLengthChange}
+                            >
+                                <option value="">Show all</option>
+                                <option value="1sec">1s</option>
+                                <option value="15min">15m</option>
+                                <option value="1hour">1h</option>
+                                <option value="4hour">4h</option>
+                            </select>
+
+                            {/* Display Filtered Machines */}
+                            <div className="mt-4">
+                                {filteredMachines.map((machine, index) => (
+                                    <div key={index} className="bg-gray-800 text-white p-2 rounded mb-2">
+                                        {machine}
+                                    </div>
+                                ))}
                             </div>
-                        )}
+                        </div>
+                    )}
                 </div>
             </div>
 
             {/* Center Panel */}
             <div className="w-2/3 bg-gray-900 mx-2 p-2 shadow-lg rounded-lg">
                 <h2 className="text-center text-lg mb-2">Trader Simulation</h2>
-
                 <div className="grid grid-cols-2 gap-2 mb-4">
                     <div>
                         <label className="block text-xs mb-1">Ending Date</label>
@@ -129,19 +117,15 @@ export default function TraderSimulation({machines, setMachines, datasetStrings}
                         />
                     </div>
                 </div>
-
                 <button className="bg-gray-700 border border-gray-600 px-2 py-1 rounded text-xs mb-4">
                     Select
                 </button>
-
                 <div className="bg-gray-800 p-2 rounded mb-4 text-xs text-white">
                     Simulation result will appear here.
                 </div>
-
                 <button className="bg-yellow-500 p-2 rounded text-xs mb-4 text-gray-900">
                     Simulate
                 </button>
-
                 <div className="bg-gray-800 p-2 rounded h-60 overflow-y-auto text-white">
                     Plots area
                 </div>
@@ -149,7 +133,6 @@ export default function TraderSimulation({machines, setMachines, datasetStrings}
 
             {/* Right Panel */}
             <div className="w-1/6 bg-gray-900 p-2 shadow-lg rounded-lg">
-                {/* Placeholder for right panel content */}
                 <div className="text-xs text-gray-400">
                     Right Panel
                 </div>

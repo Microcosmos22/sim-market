@@ -19,14 +19,14 @@ export async function getHistoricalData(startDateOrLastNcandles, tag, candleLeng
       console.log(startDateOrLastNcandles);
 
       // Construct the query string for GET request
-      const queryString = new URLSearchParams({
+      const params = new URLSearchParams({
           start_date_or_lastNcandles: JSON.stringify(startDateOrLastNcandles),
           tradingPair: tag,
           candle_length: candleLength
       }).toString();
 
       // URL with query string
-      const url = `${API_BASE_URL}/get_historical_data?${queryString}`;
+      const url = `http://localhost:5050/api/get_historical_data?${params}`;
 
       const response = await fetch(url, {method: "GET"});
 
