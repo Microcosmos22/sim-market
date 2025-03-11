@@ -5,7 +5,7 @@ import { FaTachometerAlt, FaDatabase, FaCogs, FaChartLine, FaRunning, FaBars, Fa
 import NeuralNetworkDesigner from './NeuralNetworkDesigner';
 
 
-const LeftPanel = ({machines4sim, setMachines4sim, datasetStrings, setDatasetsStrings, setResponseTrain, setChosenData, setChosenDataStrings}) => {
+const LeftPanel = ({machines4sim, setMachines4sim, datasetStrings, setDatasetsStrings, setResponseTrain, setChosenData, chosen_datastrings, setChosenDataStrings}) => {
 
   const [max_tot_return, setMax_tot_return] = useState(99999);
   const [activeTab, setActiveTab] = useState(0);
@@ -19,6 +19,10 @@ const LeftPanel = ({machines4sim, setMachines4sim, datasetStrings, setDatasetsSt
   const [isSaving, setIsSaving] = useState(false); // To manage the training state
 
   const [response_data, setResponseData] = useState([]);
+
+  const [sameCandleLengths, setSameCandleLengths] = useState(true); // State to track if candles are the same
+  const [chosenCandles, setChosenCandles] = useState([]); // State to store extracted candles
+
 
 
   // Centralize State Management Here
@@ -37,22 +41,22 @@ const LeftPanel = ({machines4sim, setMachines4sim, datasetStrings, setDatasetsSt
       layers: layers,
     });
 
-  const findallsubstrings = (beforestring, stringend) => {
+  const findallsubstrings = (input, beforestring, stringend, end_n) => {
 
       const substrings = [];
       let startIndex = 0;
 
       while (true) {
           // Find the next "saving model" after the last found index
-          const startmachine = logs.indexOf(beforestring, startIndex);
+          const startmachine = input.indexOf(beforestring, startIndex);
           if (startmachine === -1) break;  // No more occurrences
 
           // Find the next ".h5" after this "saving model"
-          const endmachine = logs.indexOf(stringend, startmachine);
+          const endmachine = input.indexOf(stringend, startmachine);
           if (endmachine === -1) break;  // No more .h5 found
 
-          // Extract substring between "saving model " and ".h5"
-          const found_substr = logs.substring(startmachine + beforestring.length, endmachine + 3);  // +3 to include ".h5"
+          // Extract substring between "saving model" and ".h5"
+          const found_substr = input.substring(startmachine + beforestring.length, endmachine + end_n);  // +3 to include ".h5"
           substrings.push(found_substr);
 
           // Update startIndex to continue searching after the current ".h5"
@@ -64,8 +68,8 @@ const LeftPanel = ({machines4sim, setMachines4sim, datasetStrings, setDatasetsSt
     const handleRetrieveMachineClick = async () => {
         try {
 
-            const machineMatches = findallsubstrings("saving model", ".h5");
-            const scalerMatches = findallsubstrings("and scaler", ".pkl");
+            const machineMatches = findallsubstrings(logs, "saving model", ".h5", 3);
+            const scalerMatches = findallsubstrings(logs, "and scaler", ".pkl", 4);
 
             if (machineMatches.length > 0) {
                 // Get the last found machine path
@@ -143,23 +147,39 @@ const LeftPanel = ({machines4sim, setMachines4sim, datasetStrings, setDatasetsSt
     };
 
 
-  const handleCheckboxChange = (index) => {
-    /* Sets selected indices, sets actually data that was chosen, should also set a list of strings */
-     setSelectedIndices((prevSelectedIndices) => {
-       const newSelectedIndices = prevSelectedIndices.includes(index)
-         ? prevSelectedIndices.filter((i) => i !== index) // Deselect
-         : [...prevSelectedIndices, index]; // Select
+    const handleCheckboxChange = (index) => {
 
-       const newSelectedDatasets = newSelectedIndices.map(i => response_data[i]);
-       setChosenData(newSelectedDatasets); // Update the actual datasets
+      setSelectedIndices((prevSelectedIndices) => {
 
-       const newSelectedDatasetsStrings = newSelectedIndices.map(i => datasetStrings[i]);
-       setChosenDataStrings(newSelectedDatasetsStrings); // Update the actual datasets
+          const newSelectedIndices = prevSelectedIndices.includes(index)
+              ? prevSelectedIndices.filter((i) => i !== index) // Deselect
+              : [...prevSelectedIndices, index]; // Select
+
+          const newSelectedDatasets = newSelectedIndices.map(i => response_data[i]);
+          setChosenData(newSelectedDatasets); // Update the actual datasets
+
+          const newSelectedDatasetsStrings = newSelectedIndices.map(i => datasetStrings[i]);
+          setChosenDataStrings(newSelectedDatasetsStrings); // Update the dataset strings
 
 
-       return newSelectedIndices;
-     });
-   };
+
+
+          const newChosenCandles = newSelectedDatasetsStrings.length > 0
+          ? newSelectedDatasetsStrings.map(data => findallsubstrings(data, "_candles", "_pair", 0))
+          : [];
+
+          console.log("candles of chosen data");
+          console.log(newChosenCandles);
+
+          setChosenCandles(newChosenCandles); // Store chosen candles
+
+          // Check if all candle lengths are the same
+          const allSame = newChosenCandles.every(candle => candle === newChosenCandles[0]);
+          setSameCandleLengths(allSame); // Update state
+
+          return newSelectedIndices;
+      });
+  };
 
 
    useEffect(() => {
@@ -235,7 +255,7 @@ const handleTrainButtonClick = async () => {
   };
 
   return (
-  <div className="bg-gray-900 p-2 shadow-lg rounded-lg flex flex-col text-xs w-[300px]">
+  <div className="bg-gray-900 p-2 shadow-lg rounded-lg flex flex-col text-xs w-[350px]">
 
     <div className="flex flex-wrap gap-2 mb-2">
   {/* Row 1: First two tabs */}
@@ -304,7 +324,13 @@ const handleTrainButtonClick = async () => {
 
             <div className="flex justify-between items-center mb-1">
               <h2 className="text-xs font-bold">Selected Datasets</h2>
-              <span className="text-yellow-400 text-xs">Total Candles: {totalCandles}</span>
+              <div className="flex flex-col space-y-1">
+                  <span className="text-yellow-400 text-xs">Total Candles: {totalCandles}</span>
+                  <p style={{ color: sameCandleLengths ? "white" : "red" }}>
+                      {sameCandleLengths ? chosenCandles[0] || "No candles selected" : "Error: Different candle lengths chosen"}
+                  </p>
+              </div>
+
             </div>
             <div className="bg-gray-900 p-2 rounded overflow-y-auto max-h-40 text-xs">
               {datasetStrings.map((dataset, index) => (

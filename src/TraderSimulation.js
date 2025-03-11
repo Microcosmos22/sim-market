@@ -85,13 +85,22 @@ export default function TraderSimulation({ machines4sim, datasetStrings }) {
                                 <option value="4hour">4h</option>
                             </select>
 
-                            {/* Display Filtered Machines */}
+                            {/* Saved Machines List */}
                             <div className="mt-4">
-                                {filteredMachines.map((machine, index) => (
-                                    <div key={index} className="bg-gray-800 text-white p-2 rounded mb-2">
+                              <h3 className="text-xs font-bold mb-1">Saved Machines:</h3>
+                              <div className="bg-gray-900 p-2 rounded text-xs max-h-32 overflow-y-auto">
+                                {machines4sim?.machines?.length > 0 ? (
+                                  <div className="flex flex-col space-y-2">
+                                    {machines4sim.machines.map((machine, index) => (
+                                      <div key={index} className="bg-gray-800 px-2 py-1 rounded">
                                         {machine}
-                                    </div>
-                                ))}
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div className="text-gray-500">No saved machines found.</div>
+                                )}
+                              </div>
                             </div>
                         </div>
                     )}

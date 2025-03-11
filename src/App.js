@@ -53,7 +53,7 @@ const App = () => {
           />
             ) : (
           <div className="flex gap-4 flex-1">
-            <div className="w-[330px] bg-gray-900 p-4 shadow-lg rounded-lg">
+            <div className="w-[380px] bg-gray-900 p-4 shadow-lg rounded-lg">
             <LeftPanel
               machines4sim = {machines4sim}
               setMachines4sim={setMachines4sim}
@@ -61,6 +61,7 @@ const App = () => {
               setDatasetsStrings={setDatasetsStrings}
               setResponseTrain={setResponseTrain}
               setChosenData={setChosenData}
+              chosen_datastrings = {chosen_datastrings}
               setChosenDataStrings={setChosenDataStrings}
               />
             </div>
