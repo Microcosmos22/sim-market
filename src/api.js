@@ -1,5 +1,6 @@
 // src/api.js
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://v2202501113287307394.goodsrv.de:5050";
+console.log("API Base url ", API_BASE_URL);
 
 const fetchMachines = async () => {
 
