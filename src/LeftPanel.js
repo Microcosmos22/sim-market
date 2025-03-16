@@ -27,6 +27,27 @@ const LeftPanel = ({machines4sim, datasetStrings, setDatasetsStrings, setRespons
     return state + 1; // Increment to force a re-render
   }
 
+  const generateColors = () => {
+  const baseColors = [
+    "bg-red-600", "bg-blue-600", "bg-green-600", "bg-yellow-600",
+    "bg-purple-600", "bg-pink-600", "bg-indigo-600", "bg-teal-600",
+    "bg-orange-600", "bg-lime-600", "bg-rose-600", "bg-emerald-600",
+    "bg-cyan-600", "bg-fuchsia-600", "bg-violet-600", "bg-amber-600"
+  ];
+
+  let colors = [];
+
+  // Expand the color list by repeating the base colors until we have 10,000 entries
+  while (colors.length < 10000) {
+    colors = [...colors, ...baseColors];
+  }
+
+  return colors.slice(0, 10000);  // Ensure the list is exactly 10,000 colors
+};
+
+const colors = generateColors(); // Generate the expanded color list
+
+
     const [_, dispatch] = useReducer(forceRenderReducer, 0);
 
     // Trigger a re-render when the machines4sim data changes
@@ -122,40 +143,41 @@ const LeftPanel = ({machines4sim, datasetStrings, setDatasetsStrings, setRespons
       updateLayer(index, key, value);
     };
 
-
     const handleCheckboxChange = (index) => {
-
       setSelectedIndices((prevSelectedIndices) => {
+        const newSelectedIndices = prevSelectedIndices.includes(index)
+          ? prevSelectedIndices.filter((i) => i !== index) // Deselect
+          : [...prevSelectedIndices, index]; // Select
 
-          const newSelectedIndices = prevSelectedIndices.includes(index)
-              ? prevSelectedIndices.filter((i) => i !== index) // Deselect
-              : [...prevSelectedIndices, index]; // Select
+        const newSelectedDatasets = newSelectedIndices.map(i => response_data[i]);
+        setChosenData(newSelectedDatasets); // Update the actual datasets
 
-          const newSelectedDatasets = newSelectedIndices.map(i => response_data[i]);
-          setChosenData(newSelectedDatasets); // Update the actual datasets
+        const newSelectedDatasetsStrings = newSelectedIndices.map(i => datasetStrings[i]);
+        setChosenDataStrings(newSelectedDatasetsStrings); // Update the dataset strings
 
-          const newSelectedDatasetsStrings = newSelectedIndices.map(i => datasetStrings[i]);
-          setChosenDataStrings(newSelectedDatasetsStrings); // Update the dataset strings
-
-
-
-
-          const newChosenCandles = newSelectedDatasetsStrings.length > 0
+        // Determine chosen candles based on selected datasets
+        const newChosenCandles = newSelectedDatasetsStrings.length > 0
           ? newSelectedDatasetsStrings.map(data => findallsubstrings(data, "_candles", "_pair", 0))
           : [];
 
-          console.log("candles of chosen data");
-          console.log(newChosenCandles);
-
-          setChosenCandles(newChosenCandles); // Store chosen candles
+        // Handle the case where no checkboxes are selected (newChosenCandles is empty)
+        if (newChosenCandles.length > 0) {
+          console.log("candles of chosen data", newChosenCandles[0]);
+          setChosenCandles(newChosenCandles[0]); // Store chosen candles
 
           // Check if all candle lengths are the same
           const allSame = newChosenCandles.every(candle => candle === newChosenCandles[0]);
           setSameCandleLengths(allSame); // Update state
+        } else {
+          // If no candles are chosen (i.e., no checkboxes are selected), set chosenCandles to empty string or some default
+          setChosenCandles("");
+          setSameCandleLengths(false); // You can adjust this based on your requirements
+        }
 
-          return newSelectedIndices;
+        return newSelectedIndices;
       });
-  };
+    };
+
 
 
    useEffect(() => {
@@ -381,27 +403,27 @@ const handleTrainButtonClick = async () => {
             <div className="mt-4">
               <h3 className="text-xs font-bold mb-1">Saved Machines:</h3>
               <div className="bg-gray-900 p-2 rounded text-xs max-h-32 overflow-y-auto">
-                {machines4sim?.machines?.length > 0 ? (
-                  <div className="flex flex-col space-y-2">
-                    {machines4sim.machines.map((machine, index) => (
-                      // Ensure unique key, use machine.id if available
+              {machines4sim?.machines?.length > 0 ? (
+                <div className="flex flex-col space-y-2">
+                  {machines4sim.machines.map((machine, index) => {
+                    // Get color based on the index, and cycle through the expanded color list
+                    const machineColor = colors[index % colors.length];
+
+                    return (
                       <div
-                        key={index} // Use index if no unique id available, but ideally use machine.id
-                        className="bg-gray-800 px-4 py-2 rounded max-w-[800px]" // Maximum width + wrap text
+                        key={index} // Ensure unique key, use machine.id if available
+                        className={`${machineColor} px-4 py-2 rounded max-w-[800px]`} // Apply color dynamically
                       >
                         {machine.name || machine} {/* Check if 'name' exists or fallback to the machine string */}
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-gray-500">No saved machines found.</div>
-                )}
-              </div>
-
-
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-gray-500">No saved machines found.</div>
+              )}
             </div>
-
-
+            </div>
 
           </div>
         )}
