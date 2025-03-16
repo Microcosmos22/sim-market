@@ -114,15 +114,17 @@ const colors = generateColors(); // Generate the expanded color list
 <div className="bg-gray-900 p-2 rounded text-xs max-h-[600px] overflow-x-auto overflow-y-auto">
   {machines4sim?.machines?.length > 0 ? (
     <div className="flex flex-col space-y-2">
-      {machines4sim.machines.map((machine, index) => {
-        // Get the color based on the index, cycling through the generated color list
+      {machines4sim.machines
+      .slice() // Create a copy to avoid mutating the original array
+      .sort((a, b) => (a.name || a).localeCompare(b.name || b)) // Sort alphabetically
+      .map((machine, index) => {
         const machineColor = colors[index % colors.length];
 
         return (
           <div
             key={index} // Use index as key for simplicity
             className={`${machineColor}
-            } px-4 py-2 rounded max-w-[800px] flex items-center space-x-2 break-words`} // Apply color dynamically, ensure text wraps
+          } px-4 py-2 rounded flex items-center space-x-2 break-words`} // Apply color dynamically, ensure text wraps
           >
             {/* Checkbox for selecting/deselecting machine */}
             <input
@@ -132,7 +134,7 @@ const colors = generateColors(); // Generate the expanded color list
               className="w-4 h-4"
             />
             {/* Machine name with wrapping for exactly 2 lines */}
-            <div className="line-clamp-2 break-words">{machine.name || machine}</div>
+            <div className="break-words whitespace-normal">{machine.name || machine}</div>
           </div>
         );
       })}
