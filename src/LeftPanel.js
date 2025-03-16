@@ -1,11 +1,11 @@
 import { Tabs, Tab } from '@mui/material';
-import { useState, useEffect } from 'react';
+import { useReducer, useState, useEffect } from 'react';
 import * as api from "./api"; // Import all API functions
 import { FaTachometerAlt, FaDatabase, FaCogs, FaChartLine, FaRunning, FaBars, FaClipboardList, FaTimes } from 'react-icons/fa';
 import NeuralNetworkDesigner from './NeuralNetworkDesigner';
 
 
-const LeftPanel = ({machines4sim, setMachines4sim, datasetStrings, setDatasetsStrings, setResponseTrain, setChosenData, chosen_datastrings, setChosenDataStrings}) => {
+const LeftPanel = ({machines4sim, datasetStrings, setDatasetsStrings, setResponseTrain, setChosenData, chosen_datastrings, setChosenDataStrings}) => {
 
   const [max_tot_return, setMax_tot_return] = useState(99999);
   const [activeTab, setActiveTab] = useState(0);
@@ -23,7 +23,17 @@ const LeftPanel = ({machines4sim, setMachines4sim, datasetStrings, setDatasetsSt
   const [sameCandleLengths, setSameCandleLengths] = useState(true); // State to track if candles are the same
   const [chosenCandles, setChosenCandles] = useState([]); // State to store extracted candles
 
+  function forceRenderReducer(state) {
+    return state + 1; // Increment to force a re-render
+  }
 
+    const [_, dispatch] = useReducer(forceRenderReducer, 0);
+
+    // Trigger a re-render when the machines4sim data changes
+    useEffect(() => {
+
+      dispatch(); // Trigger the reducer to force a re-render
+    }, [machines4sim]);
 
   // Centralize State Management Here
     const [layers, setLayers] = useState([
@@ -64,40 +74,6 @@ const LeftPanel = ({machines4sim, setMachines4sim, datasetStrings, setDatasetsSt
       }
       return substrings;
     }
-
-    const handleRetrieveMachineClick = async () => {
-        try {
-
-            const machineMatches = findallsubstrings(logs, "saving model", ".h5", 3);
-            const scalerMatches = findallsubstrings(logs, "and scaler", ".pkl", 4);
-
-            if (machineMatches.length > 0) {
-                // Get the last found machine path
-                const lastMachineMatch = machineMatches.at(-1);  // .at(-1) gets the last item safely
-                const lastScalerMatch = scalerMatches.at(-1);  // .at(-1) gets the last item safely
-
-                console.log("Last Machine Match:", lastMachineMatch);
-                console.log("Last Scaler Match:", lastScalerMatch);
-
-                // Use the prop version of setMachine4sim to update state
-                setMachines4sim((prevData) => {
-                    const newState = {
-                        ...prevData,
-                        machines: Array.isArray(lastMachineMatch) ? [...prevData.machines, ...lastMachineMatch] : [...prevData.machines, lastMachineMatch],
-                        scalers: Array.isArray(lastScalerMatch) ? [...prevData.scalers, ...lastScalerMatch] : [...prevData.scalers, lastScalerMatch],
-                    };
-                    console.log("Updated Machines4Sim:", newState);
-                    return newState;
-                });
-
-
-                console.log(machines4sim)
-
-            }
-        } catch (error) {
-            console.error("Error retrieving machine names:", error);
-        }
-    };
 
 
     // 🛠️ Update Layer
@@ -388,14 +364,6 @@ const handleTrainButtonClick = async () => {
               {isTraining ? "Training..." : "Train"}
             </button>
 
-            {/* Retrieve Latest Machine Button */}
-            <button
-              onClick={handleRetrieveMachineClick}
-              className="bg-yellow-500 text-white p-1 rounded hover:bg-blue-600 disabled:bg-gray-300 text-xs mr-2"
-              disabled={isSaving}  // Kept isSaving here as it makes sense
-            >
-              {isSaving ? "Saving..." : "Retrieve Latest Machine"}
-            </button>
 
             {/* Log Output */}
             <div className="mt-2">
@@ -416,8 +384,12 @@ const handleTrainButtonClick = async () => {
                 {machines4sim?.machines?.length > 0 ? (
                   <div className="flex flex-col space-y-2">
                     {machines4sim.machines.map((machine, index) => (
-                      <div key={index} className="bg-gray-800 px-2 py-1 rounded">
-                        {machine}
+                      // Ensure unique key, use machine.id if available
+                      <div
+                        key={index} // Use index if no unique id available, but ideally use machine.id
+                        className="bg-gray-800 px-4 py-2 rounded max-w-[800px]" // Maximum width + wrap text
+                      >
+                        {machine.name || machine} {/* Check if 'name' exists or fallback to the machine string */}
                       </div>
                     ))}
                   </div>
@@ -425,6 +397,8 @@ const handleTrainButtonClick = async () => {
                   <div className="text-gray-500">No saved machines found.</div>
                 )}
               </div>
+
+
             </div>
 
 

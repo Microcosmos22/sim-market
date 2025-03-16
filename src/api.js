@@ -2,18 +2,27 @@
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 console.log("API Base url ", API_BASE_URL);
 
-const fetchMachines = async () => {
-
+export async function fetchMachines() {
     const url = `${API_BASE_URL}/machines`;
-    const response = await fetch(url, {method: "GET"});
+    const response = await fetch(url, { method: "GET" });
 
-    if (!response.ok) throw new Error("Failed to fetch machine names");
+    if (!response.ok) {
+        console.error("Failed to fetch machine names. Status:", response.status);
+        throw new Error("Failed to fetch machine names");
+    }
 
-    const machineStrings = await response.json(); // Parse the JSON response
-    console.log("Calling  machine names"); // You can use the machineStrings here
-    return machineStrings; // Return the list of machine filenames
+    let machineStrings;
+    try {
+        machineStrings = await response.json(); // Parse the JSON response
+        
+    } catch (error) {
+        console.error("Error parsing machine data:", error);
+        return { machines: [], scalers: [] }; // Return empty structure on error
+    }
 
-};
+    return { machines: machineStrings, scalers: [] }; // Ensure it's wrapped in an object with "machines"
+}
+
 
 export async function getHistoricalData(startDateOrLastNcandles, tag, candleLength) {
 

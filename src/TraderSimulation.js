@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import * as api from "./api"; // Import all API functions
 
-export default function TraderSimulation({ machines4sim, datasetStrings }) {
+export default function TraderSimulation({machines4sim, setMachines4sim}) {
     const [activeTab, setActiveTab] = useState("strategy");
     const [filteredMachines, setFilteredMachines] = useState([]);  // Filtered list based on candle length
     const [selectedCandleLength, setSelectedCandleLength] = useState("");  // Selected candle length
 
-    // Automatically update machines when machines4sim changes
+
+    // Filter machines automatically if machines4sim changes
     useEffect(() => {
         if (machines4sim) {
             filterMachines(machines4sim.machines, selectedCandleLength);  // Filter based on candle length
@@ -35,39 +37,22 @@ export default function TraderSimulation({ machines4sim, datasetStrings }) {
                 <div className="mb-4">
                     <div className="flex">
                         <button
-                            onClick={() => setActiveTab("strategy")}
-                            className={`flex-1 py-1 ${activeTab === "strategy" ? "bg-gray-700" : "bg-gray-800"} text-white rounded-t`}
-                        >
-                            Trader Strategy
-                        </button>
-                        <button
                             onClick={() => setActiveTab("machines")}
                             className={`flex-1 py-1 ${activeTab === "machines" ? "bg-gray-700" : "bg-gray-800"} text-white rounded-t`}
                         >
                             Machines
                         </button>
+
+                        <button
+                            onClick={() => setActiveTab("strategy")}
+                            className={`flex-1 py-1 ${activeTab === "strategy" ? "bg-gray-700" : "bg-gray-800"} text-white rounded-t`}
+                        >
+                            Trader Strategy
+                        </button>
+
                     </div>
 
-                    {activeTab === "strategy" && (
-                        <div className="mt-2 space-y-2">
-                            <div className="flex justify-between items-center">
-                                <label className="text-xs">Budget</label>
-                                <input
-                                    type="number"
-                                    placeholder="Budget"
-                                    className="bg-gray-800 border border-gray-600 p-1 rounded text-xs text-white w-24"
-                                />
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <label className="text-xs">Stiffness</label>
-                                <input
-                                    type="number"
-                                    placeholder="Stiffness"
-                                    className="bg-gray-800 border border-gray-600 p-1 rounded text-xs text-white w-24"
-                                />
-                            </div>
-                        </div>
-                    )}
+
 
                     {activeTab === "machines" && (
                         <div className="p-4">
@@ -101,6 +86,27 @@ export default function TraderSimulation({ machines4sim, datasetStrings }) {
                                   <div className="text-gray-500">No saved machines found.</div>
                                 )}
                               </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === "strategy" && (
+                        <div className="mt-2 space-y-2">
+                            <div className="flex justify-between items-center">
+                                <label className="text-xs">Budget</label>
+                                <input
+                                    type="number"
+                                    placeholder="Budget"
+                                    className="bg-gray-800 border border-gray-600 p-1 rounded text-xs text-white w-24"
+                                />
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <label className="text-xs">Stiffness</label>
+                                <input
+                                    type="number"
+                                    placeholder="Stiffness"
+                                    className="bg-gray-800 border border-gray-600 p-1 rounded text-xs text-white w-24"
+                                />
                             </div>
                         </div>
                     )}

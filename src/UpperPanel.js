@@ -17,36 +17,57 @@ const UpperPanel = ({chosen_data}) => {
     setActiveTab(newValue);
   };
 
-  // Re-Generate plots whenever chosen_data changes
+
   useEffect(() => {
     async function fetchData() {
+      // Only proceed if chosen_data is not empty
       if (chosen_data.length > 0) {
         console.log('Plotter fetched chosen data size:', chosen_data.length);
 
+        // Check if each dataset has the expected structure
         const newCandleDivs = chosen_data.map((dataset, index) => {
-        return analysis.displayCandlechart(dataset.data, dataset.time, dataset.tradingPair);
-        });
+          // Ensure dataset.data and dataset.time are defined before using them
+          if (dataset && dataset.data && dataset.time) {
+            return analysis.displayCandlechart(dataset.data, dataset.time, dataset.tradingPair);
+          } else {
+            console.warn(`Dataset at index ${index} is missing required properties (data or time)`);
+            return null; // Return null if the dataset is invalid, to skip rendering this item
+          }
+        }).filter(div => div !== null); // Remove null values if any
 
         const newfeaturesDivs = chosen_data.map((dataset, index) => {
-        return (<PlotFeatureTimeseries features={dataset.features} time={dataset.time}/>);
-        });
+          // Ensure dataset.features and dataset.time are defined
+          if (dataset && dataset.features && dataset.time) {
+            return (<PlotFeatureTimeseries features={dataset.features} time={dataset.time} />);
+          } else {
+            console.warn(`Dataset at index ${index} is missing required properties (features or time)`);
+            return null;
+          }
+        }).filter(div => div !== null); // Remove null values
 
         const newCorrDivs = chosen_data.map((dataset, index) => {
-          const matrix = analysis.correlation_matrix(dataset.features);
-        return analysis.displayCorrelationMatrix(matrix); // Store the correlation matrix div
-        });
+          // Ensure dataset.features is defined before calling correlation_matrix
+          if (dataset && dataset.features) {
+            const matrix = analysis.correlation_matrix(dataset.features);
+            return analysis.displayCorrelationMatrix(matrix);
+          } else {
+            console.warn(`Dataset at index ${index} is missing required properties (features)`);
+            return null;
+          }
+        }).filter(div => div !== null); // Remove null values
 
-
+        // Update state with valid divs
         setCandlechartDiv(newCandleDivs);
         setFeaturesDiv(newfeaturesDivs);
         setCorrelationMatrixDiv(newCorrDivs);
         //setAvgCorrDiv(computeAverageMatrix(newCorrDivs));
+      } else {
+        console.warn("No chosen data available to fetch.");
       }
     }
 
-    // Only call fetchData when features or data change
-    fetchData();
-  }, [chosen_data]); // Now it will re-run when `features`, `data`, or `time` change
+    fetchData(); // Call the function to fetch the data
+  }, [chosen_data]); // Re-run whenever chosen_data changes
 
   function computeAverageMatrix(correlationMatrixDivs) {
   const numMatrices = correlationMatrixDivs.length;

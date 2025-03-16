@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { FaTachometerAlt, FaCogs, FaChartLine, FaClipboardList } from 'react-icons/fa';
 import * as api from "./api"; // Import all API functions
+import { fetchMachines } from "./api"; // ✅ Ensure correct path
+
 import BottomPanel from "./BottomPanel";
 import UpperPanel from './UpperPanel'; // Adjust the path if needed
 import LeftPanel from './LeftPanel'; // Adjust the path if needed
@@ -15,8 +17,33 @@ const App = () => {
   const [chosen_datastrings, setChosenDataStrings] = useState([]);
 
   const [datasetStrings, setDatasetsStrings] = useState([]); // Only the stringname
+  const [machines4sim, setMachines4Sim] = useState({ machines: [], scalers: [] }); // ✅ Correct initial state
 
-  const [machines4sim, setMachines4sim] = useState({ machines: [], scalers: [] }); // Initialize with empty lists for "machines" and "scalers"
+
+  // UPDATE MACHINES EVERY 10 SECONDS
+  useEffect(() => {
+    const updateMachines = async () => {
+        try {
+            const data = await fetchMachines(); // Fetch new data
+            
+            setMachines4Sim((prevState) => ({
+                ...prevState, // Keep existing scalers
+                machines: data.machines, // Update only the 'machines' field
+            }));
+        } catch (error) {
+            console.error("Error fetching machines:", error);
+        }
+    };
+
+    updateMachines(); // Call once initially
+
+    const interval = setInterval(updateMachines, 10000); // Auto-refresh every 10s
+
+    return () => clearInterval(interval); // Cleanup on component unmount
+}, []);
+
+
+
 
 
   useEffect(() => {
@@ -47,16 +74,12 @@ const App = () => {
 
       <div className="flex flex-1 flex-col p-4 gap-4 overflow-auto">
         {activeMenu === "Trader Simulation" ? (
-          <TraderSimulation
-            machines4sim={machines4sim}
-            datasetStrings={datasetStrings}
-          />
+          <TraderSimulation/>
             ) : (
           <div className="flex gap-4 flex-1">
             <div className="w-[380px] bg-gray-900 p-4 shadow-lg rounded-lg">
             <LeftPanel
               machines4sim = {machines4sim}
-              setMachines4sim={setMachines4sim}
               datasetStrings={datasetStrings}
               setDatasetsStrings={setDatasetsStrings}
               setResponseTrain={setResponseTrain}
