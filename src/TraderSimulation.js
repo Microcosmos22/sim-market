@@ -3,7 +3,7 @@ import * as api from "./api"; // Import all API functions
 
 export default function TraderSimulation({ machines4sim, setMachines4sim }) {
   const [activeTab, setActiveTab] = useState("machines");
-  const [filteredMachines, setFilteredMachines] = useState([]); // Filtered list based on candle length
+  const [filteredMachines, setFilteredMachines] = useState([]); // For display
   const [selectedCandleLength, setSelectedCandleLength] = useState(""); // Selected candle length
   const [selectedMachines, setSelectedMachines] = useState([]); // To store selected machines
 
@@ -11,6 +11,7 @@ export default function TraderSimulation({ machines4sim, setMachines4sim }) {
   function forceRenderReducer(state) {
     return state + 1;   }
   const [_, dispatch] = useReducer(forceRenderReducer, 0);
+
   useEffect(() => {
     dispatch(); // Trigger the reducer to force a re-render
   }, [machines4sim]);
@@ -60,18 +61,30 @@ const colors = generateColors(); // Generate the expanded color list
     setSelectedCandleLength(selectedLength); // Update the selected candle length
   };
 
-  // Handle checkbox change to select/deselect machines
-  const handleCheckboxChange = (machine) => {
-    setSelectedMachines((prevSelected) => {
-      if (prevSelected.includes(machine)) {
-        // If already selected, remove it from the list
-        return prevSelected.filter((m) => m !== machine);
-      } else {
-        // Otherwise, add it to the list
-        return [...prevSelected, machine];
-      }
-    });
-  };
+
+  const handleCheckboxChange = (machineId) => {
+
+  setSelectedMachines((prevSelected) => {
+    console.log(" clicked: ", machineId)
+
+
+    console.log( "includes? ",prevSelected.includes(machineId));
+
+    if (prevSelected.includes(machineId)) {
+      // If the machine is already selected, uncheck it (remove from list)
+      console.log(" Selected: ", prevSelected.filter((id) => id !== machineId))
+      return prevSelected.filter((id) => id !== machineId);
+    } else {
+      // If the machine is not selected, check it (add to list)
+      console.log(" Selected: ", [...prevSelected, machineId])
+      return [...prevSelected, machineId];
+    }
+
+  });
+};
+
+
+
 
   return (
     <div className="flex min-h-screen bg-black text-xs text-white">
@@ -111,38 +124,39 @@ const colors = generateColors(); // Generate the expanded color list
               </select>
 
               {/* Saved Machines List */}
-<div className="bg-gray-900 p-2 rounded text-xs max-h-[600px] overflow-x-auto overflow-y-auto">
-  {machines4sim?.machines?.length > 0 ? (
-    <div className="flex flex-col space-y-2">
-      {machines4sim.machines
-      .slice() // Create a copy to avoid mutating the original array
-      .sort((a, b) => (a.name || a).localeCompare(b.name || b)) // Sort alphabetically
-      .map((machine, index) => {
-        const machineColor = colors[index % colors.length];
+              <div className="bg-gray-900 p-2 rounded text-xs max-h-[600px] overflow-x-auto overflow-y-auto">
+                {machines4sim?.machines?.length > 0 ? (
+                  <div className="flex flex-col space-y-2">
+                    {machines4sim.machines
+                    .slice() // Create a copy to avoid mutating the original array
+                    .sort((a, b) => (a.name || a).localeCompare(b.name || b)) // Sort alphabetically
+                    .map((machine, index) => {
+                      const machineColor = colors[index % colors.length];
 
-        return (
-          <div
-            key={index} // Use index as key for simplicity
-            className={`${machineColor}
-          } px-4 py-2 rounded flex items-center space-x-2 break-words`} // Apply color dynamically, ensure text wraps
-          >
-            {/* Checkbox for selecting/deselecting machine */}
-            <input
-              type="checkbox"
-              checked={selectedMachines.includes(index)} // Check if machine is selected
-              onChange={() => handleCheckboxChange(index)} // Handle selection change
-              className="w-4 h-4"
-            />
-            {/* Machine name with wrapping for exactly 2 lines */}
-            <div className="break-words whitespace-normal">{machine.name || machine}</div>
-          </div>
-        );
-      })}
-    </div>
-  ) : (
-    <div className="text-gray-500">No saved machines found.</div>
-  )}
-</div>
+                      return (
+                        <div
+                          key={index} // Use index as key for simplicity
+                          className={`${machineColor}
+                        } px-4 py-2 rounded flex items-center space-x-2 break-words`} // Apply color dynamically, ensure text wraps
+                        >
+                          {/* Checkbox for selecting/deselecting machine */}
+                          <input
+                            type="checkbox"
+                            checked={selectedMachines.includes(index)}  // Check if machineId is in selectedMachines
+                            onChange={() => handleCheckboxChange(index)}  // Handle selection change
+                            className="w-4 h-4"
+                          />
+
+                          {/* Machine name with wrapping for exactly 2 lines */}
+                          <div className="break-words whitespace-normal">{machine.name || machine}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-gray-500">No saved machines found.</div>
+                )}
+              </div>
 
 
 

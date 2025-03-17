@@ -74,7 +74,7 @@ const App = () => {
 
       <div className="flex flex-1 flex-col p-4 gap-4 overflow-auto">
         {activeMenu === "Trader Simulation" ? (
-          <TraderSimulation machines4sim = {machines4sim}/>
+          <TraderSimulation machines4sim = {machines4sim} setMachines4Sim = {setMachines4Sim}/>
             ) : (
           <div className="flex gap-4 flex-1">
             <div className="w-[380px] bg-gray-900 p-4 shadow-lg rounded-lg">
