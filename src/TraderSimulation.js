@@ -19,27 +19,29 @@ export default function TraderSimulation({ machines4sim, setMachines4sim }) {
   const colors = Tools.generateColors(); // Generate the expanded color list
 
 
-  // Filter machines automatically if machines4sim changes
-  useEffect(() => {
-    if (machines4sim) {
-      filterMachines(machines4sim.machines, selectedCandleLength); // Filter based on candle length
-    }
-  }, [machines4sim, selectedCandleLength]);
-
-  // Function to filter machines based on selected candle length
-  const filterMachines = (machines, candleLength) => {
-    if (candleLength) {
-      const filtered = machines.filter((machine) => machine.includes(candleLength));
-      setFilteredMachines(filtered); // Update the state with the filtered machines
-    } else {
-      setFilteredMachines(machines); // Show all machines if no filter is selected
-    }
-  };
-
   // Handle candle length selection
   const handleCandleLengthChange = (event) => {
-    const selectedLength = event.target.value;
-    setSelectedCandleLength(selectedLength); // Update the selected candle length
+    const selectedLen = event.target.value;
+    setSelectedCandleLength(selectedLen); // Update the selected candle length
+    if (selectedLen === ""){
+      setFilteredMachines(machines4sim.machines);
+      return;
+    }
+
+    // Initialize an array to hold the results
+    const machineLen = machines4sim.machines.map(machine => {
+      return Tools.findallsubstrings(machine);  // Apply `findallsubstrings` to each string
+    });
+
+    console.log("selected length ", selectedLen);
+    const filteredMachines = machines4sim.machines.map((machine, i) => {
+      console.log("machine length ", machineLen)
+
+      if (machineLen[i] === selectedLen){
+        return machines4sim.machines[i]
+      }
+      setFilteredMachines(filteredMachines);
+    });
   };
 
 
@@ -106,9 +108,9 @@ export default function TraderSimulation({ machines4sim, setMachines4sim }) {
 
               {/* Saved Machines List */}
               <div className="bg-gray-900 p-2 rounded text-xs max-h-[600px] overflow-x-auto overflow-y-auto">
-                {machines4sim?.machines?.length > 0 ? (
+                {filteredMachines?.length > 0 ? (
                   <div className="flex flex-col space-y-2">
-                    {machines4sim.machines
+                    {filteredMachines
                     .slice() // Create a copy to avoid mutating the original array
                     .sort((a, b) => (a.name || a).localeCompare(b.name || b)) // Sort alphabetically
                     .map((machine, index) => {
@@ -138,9 +140,6 @@ export default function TraderSimulation({ machines4sim, setMachines4sim }) {
                   <div className="text-gray-500">No saved machines found.</div>
                 )}
               </div>
-
-
-
 
 
 

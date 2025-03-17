@@ -4,6 +4,8 @@ import * as api from "./api"; // Import all API functions
 import { fetchMachines } from "./api"; // ✅ Ensure correct path
 
 function findallsubstrings(input, beforestring, stringend, end_n) {
+    // Given a string before and a string after, it returns the string in between.
+    // If you wish to include part of the after string, specify end_n > 0.
 
     const substrings = [];
     let startIndex = 0;
@@ -24,7 +26,7 @@ function findallsubstrings(input, beforestring, stringend, end_n) {
         // Update startIndex to continue searching after the current ".h5"
         startIndex = endmachine + 3;  // Move past the current ".h5"
     }
-    return substrings;
+    return substrings[0];
   }
 
 

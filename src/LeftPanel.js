@@ -10,7 +10,7 @@ const LeftPanel = ({machines4sim, datasetStrings, setDatasetsStrings, setRespons
 
   const [max_tot_return, setMax_tot_return] = useState(99999);
   const [activeTab, setActiveTab] = useState(0);
-  const [candleLength, setCandleLength] = useState("1hour");
+  const [candleLength, setCandleLength] = useState("1h");
   const [tradingPair, setTradingPair] = useState("BTCUSD");
   const [endDate, setEndDate] = useState(getTodayDate());
   const [selectedIndices, setSelectedIndices] = useState([]); // To track selected checkboxes
@@ -33,7 +33,6 @@ const LeftPanel = ({machines4sim, datasetStrings, setDatasetsStrings, setRespons
 
     // Trigger a re-render when the machines4sim data changes
     useEffect(() => {
-
       dispatch(); // Trigger the reducer to force a re-render
     }, [machines4sim]);
 
@@ -111,19 +110,28 @@ const LeftPanel = ({machines4sim, datasetStrings, setDatasetsStrings, setRespons
         const newSelectedDatasetsStrings = newSelectedIndices.map(i => datasetStrings[i]);
         setChosenDataStrings(newSelectedDatasetsStrings); // Update the dataset strings
 
-        // Determine chosen candles based on selected datasets
-        const newChosenCandles = newSelectedDatasetsStrings.length > 0
+        // Extract candle substrings to a list
+        const newChosenCandlesList = newSelectedDatasetsStrings.length > 0
           ? newSelectedDatasetsStrings.map(data => Tools.findallsubstrings(data, "_candles", "_pair", 0))
           : [];
 
-        // Handle the case where no checkboxes are selected (newChosenCandles is empty)
-        if (newChosenCandles.length > 0) {
-          console.log("candles of chosen data", newChosenCandles[0]);
-          setChosenCandles(newChosenCandles[0]); // Store chosen candles
+          console.log("Candle substrings ", newChosenCandlesList);
 
-          // Check if all candle lengths are the same
-          const allSame = newChosenCandles.every(candle => candle === newChosenCandles[0]);
-          setSameCandleLengths(allSame); // Update state
+        // Handle the case where no checkboxes are selected (newChosenCandles is empty)
+        if (newChosenCandlesList.length > 0) {
+
+          setChosenCandles(newChosenCandlesList[0]); // Store chosen candles
+
+          // If all candle lengths are the same, set allSameCnadleLengths = TRUE else FALSE
+          const allSameCandleLenghts = newChosenCandlesList.every(candle => candle === newChosenCandlesList[0]);
+          setSameCandleLengths(allSameCandleLenghts); // Update state
+
+          // If all the same, set the NN parameter
+          if (allSameCandleLenghts){
+            setNN((prevNN) => ({
+                ...prevNN, candleLength: newChosenCandlesList[0].toString(), // Update the candleLength property
+              }));
+          }
         } else {
           // If no candles are chosen (i.e., no checkboxes are selected), set chosenCandles to empty string or some default
           setChosenCandles("");
@@ -247,9 +255,9 @@ const handleTrainButtonClick = async () => {
             {/* First Row - Dropdowns */}
             <div className="w-full sm:w-auto">
               <select className="bg-gray-800 border border-gray-600 p-1 rounded text-xs" value={candleLength} onChange={(e) => setCandleLength(e.target.value)}>
-                <option>15min</option>
-                <option>1hour</option>
-                <option>4hour</option>
+                <option>15m</option>
+                <option>1h</option>
+                <option>4h</option>
               </select>
             </div>
 
@@ -281,7 +289,7 @@ const handleTrainButtonClick = async () => {
               <div className="flex flex-col space-y-1">
                   <span className="text-yellow-400 text-xs">Total Candles: {totalCandles}</span>
                   <p style={{ color: sameCandleLengths ? "white" : "red" }}>
-                      {sameCandleLengths ? chosenCandles[0] || "No candles selected" : "Error: Different candle lengths chosen"}
+                      {sameCandleLengths ? chosenCandles || "No candles selected" : "Error: Different candle lengths chosen"}
                   </p>
               </div>
 

@@ -14,7 +14,7 @@ export async function fetchMachines() {
     let machineStrings;
     try {
         machineStrings = await response.json(); // Parse the JSON response
-        
+
     } catch (error) {
         console.error("Error parsing machine data:", error);
         return { machines: [], scalers: [] }; // Return empty structure on error
@@ -49,7 +49,7 @@ export async function getHistoricalData(startDateOrLastNcandles, tag, candleLeng
 export async function trainModel(NN, datasetStrings, max_total_return) {
     // Construct the query parameters using URLSearchParams
     const params = new URLSearchParams({
-        candle_length: NN.candle_length,
+        candle_length: NN.candleLength,
         epochs: NN.epochs,
         lookf: NN.lookf,
         lookb: NN.lookb,
@@ -58,6 +58,9 @@ export async function trainModel(NN, datasetStrings, max_total_return) {
         max_total_return: max_total_return || 100,  // Provide a default if undefined
         layers: JSON.stringify(NN.layers),  // Serialize layers array as JSON string
     });
+
+    console.log("API sending candle length ", NN.candleLength);
+    console.log("API sending candle length ", params.get('candle_length'));
 
     // Append each dataset string as a separate `target_strings` parameter
     datasetStrings.forEach((datasetString) => {
