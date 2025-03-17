@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useReducer } from 'react';
 import * as api from "./api"; // Import all API functions
+import Tools from './Tools';
 
 export default function TraderSimulation({ machines4sim, setMachines4sim }) {
   const [activeTab, setActiveTab] = useState("machines");
@@ -15,27 +16,7 @@ export default function TraderSimulation({ machines4sim, setMachines4sim }) {
   useEffect(() => {
     dispatch(); // Trigger the reducer to force a re-render
   }, [machines4sim]);
-
-  const generateColors = () => {
-  const baseColors = [
-    "bg-red-600", "bg-blue-600", "bg-green-600", "bg-yellow-600",
-    "bg-purple-600", "bg-pink-600", "bg-indigo-600", "bg-teal-600",
-    "bg-orange-600", "bg-lime-600", "bg-rose-600", "bg-emerald-600",
-    "bg-cyan-600", "bg-fuchsia-600", "bg-violet-600", "bg-amber-600"
-  ];
-
-  let colors = [];
-
-  // Expand the color list by repeating the base colors until we have 10,000 entries
-  while (colors.length < 10000) {
-    colors = [...colors, ...baseColors];
-  }
-
-  return colors.slice(0, 10000);  // Ensure the list is exactly 10,000 colors
-};
-
-const colors = generateColors(); // Generate the expanded color list
-
+  const colors = Tools.generateColors(); // Generate the expanded color list
 
 
   // Filter machines automatically if machines4sim changes

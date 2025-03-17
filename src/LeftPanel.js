@@ -3,6 +3,7 @@ import { useReducer, useState, useEffect } from 'react';
 import * as api from "./api"; // Import all API functions
 import { FaTachometerAlt, FaDatabase, FaCogs, FaChartLine, FaRunning, FaBars, FaClipboardList, FaTimes } from 'react-icons/fa';
 import NeuralNetworkDesigner from './NeuralNetworkDesigner';
+import Tools from './Tools';
 
 
 const LeftPanel = ({machines4sim, datasetStrings, setDatasetsStrings, setResponseTrain, setChosenData, chosen_datastrings, setChosenDataStrings}) => {
@@ -27,27 +28,7 @@ const LeftPanel = ({machines4sim, datasetStrings, setDatasetsStrings, setRespons
     return state + 1; // Increment to force a re-render
   }
 
-  const generateColors = () => {
-  const baseColors = [
-    "bg-red-600", "bg-blue-600", "bg-green-600", "bg-yellow-600",
-    "bg-purple-600", "bg-pink-600", "bg-indigo-600", "bg-teal-600",
-    "bg-orange-600", "bg-lime-600", "bg-rose-600", "bg-emerald-600",
-    "bg-cyan-600", "bg-fuchsia-600", "bg-violet-600", "bg-amber-600"
-  ];
-
-  let colors = [];
-
-  // Expand the color list by repeating the base colors until we have 10,000 entries
-  while (colors.length < 10000) {
-    colors = [...colors, ...baseColors];
-  }
-
-  return colors.slice(0, 10000);  // Ensure the list is exactly 10,000 colors
-};
-
-const colors = generateColors(); // Generate the expanded color list
-
-
+    const colors = Tools.generateColors(); // Generate the expanded color list
     const [_, dispatch] = useReducer(forceRenderReducer, 0);
 
     // Trigger a re-render when the machines4sim data changes
@@ -71,31 +52,6 @@ const colors = generateColors(); // Generate the expanded color list
       epochs: 100,
       layers: layers,
     });
-
-  const findallsubstrings = (input, beforestring, stringend, end_n) => {
-
-      const substrings = [];
-      let startIndex = 0;
-
-      while (true) {
-          // Find the next "saving model" after the last found index
-          const startmachine = input.indexOf(beforestring, startIndex);
-          if (startmachine === -1) break;  // No more occurrences
-
-          // Find the next ".h5" after this "saving model"
-          const endmachine = input.indexOf(stringend, startmachine);
-          if (endmachine === -1) break;  // No more .h5 found
-
-          // Extract substring between "saving model" and ".h5"
-          const found_substr = input.substring(startmachine + beforestring.length, endmachine + end_n);  // +3 to include ".h5"
-          substrings.push(found_substr);
-
-          // Update startIndex to continue searching after the current ".h5"
-          startIndex = endmachine + 3;  // Move past the current ".h5"
-      }
-      return substrings;
-    }
-
 
     // 🛠️ Update Layer
     const updateLayer = (index, key, value) => {
@@ -157,7 +113,7 @@ const colors = generateColors(); // Generate the expanded color list
 
         // Determine chosen candles based on selected datasets
         const newChosenCandles = newSelectedDatasetsStrings.length > 0
-          ? newSelectedDatasetsStrings.map(data => findallsubstrings(data, "_candles", "_pair", 0))
+          ? newSelectedDatasetsStrings.map(data => Tools.findallsubstrings(data, "_candles", "_pair", 0))
           : [];
 
         // Handle the case where no checkboxes are selected (newChosenCandles is empty)
