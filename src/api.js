@@ -23,13 +23,14 @@ export async function fetchMachines() {
     }
 }
 
-export async function simulate_machines(sim_N, machine_strs){
+export async function simulate_machines(sim_N, tag, machine_strs){
 
   console.log(" Sim machines: ", machine_strs);
   console.log(" Steps: ", sim_N);
 
   const params = new URLSearchParams({
       sim_N: sim_N,
+      tradingPair: tag,
       machine_strs: machine_strs,
   }).toString();
 

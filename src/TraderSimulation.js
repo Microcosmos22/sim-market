@@ -8,6 +8,10 @@ export default function TraderSimulation({ machines4sim, setMachines4sim }) {
   const [selectedCandleLength, setSelectedCandleLength] = useState(""); // Selected candle length (string)
   const [selectedMachinesId, setselectedMachinesId] = useState([]); // To store selected machines
   const [selectedMachineStr, setSelectedMachineStr] = useState([]); // To store selected machines
+  const commonCryptoPairs = ['BTC/USD','ETH/USD','BTC/ETH','BTC/USDT','ETH/USDT'];
+
+  // Define a state variable to store the selected pair
+  const [selectedPair, setSelectedPair] = useState('');
 
   const [simN, setSimN] = useState("");
   const [portfolios, setPortfolios] = useState([]);
@@ -30,6 +34,13 @@ export default function TraderSimulation({ machines4sim, setMachines4sim }) {
   }, [machines4sim]);
   const colors = Tools.generateColors(); // Generate the expanded color list
 
+  // Handler function to update the selected pair
+  const handleSelectChange = (event) => {
+    const selectedPairTag = event.target.value;
+    setSelectedPair(selectedPairTag);  // Update local state
+    console.log('Selected Crypto Pair:', selectedPairTag);
+    // You can also update a global variable or use context if needed
+  };
 
   // Handle candle length selection
   const handleCandleLengthChange = (event) => {
@@ -84,7 +95,7 @@ export default function TraderSimulation({ machines4sim, setMachines4sim }) {
 
   const handleSimulate = () => {
     console.log(" Simulate machines ", selectedMachineStr);
-    setPortfolios(api.simulate_machines( simN, selectedMachineStr));
+    setPortfolios(api.simulate_machines( simN, selectedPair, selectedMachineStr));
 
   }
 
@@ -210,26 +221,46 @@ export default function TraderSimulation({ machines4sim, setMachines4sim }) {
       {/* Center Panel */}
       <div className="w-2/3 bg-gray-900 mx-2 p-2 shadow-lg rounded-lg">
         <h2 className="text-center text-lg mb-2">Trader Simulation</h2>
-        <div className="grid grid-cols-2 gap-2 mb-4">
-          <div>
-            <label className="block text-xs mb-1">Ending Date</label>
-            <input
-              type="date"
-              className="bg-gray-800 border border-gray-600 p-1 rounded text-xs text-white w-full"
-              defaultValue={new Date().toISOString().split('T')[0]} // Set default date
-            />
+        <div className="grid grid-cols-3 gap-2 mb-4">
+            {/* First Input - Ending Date */}
+            <div>
+              <label className="block text-xs mb-1">Ending Date</label>
+              <input
+                type="date"
+                className="bg-gray-800 border border-gray-600 p-1 rounded text-xs text-white w-full"
+                defaultValue={new Date().toISOString().split('T')[0]} // Set default date
+              />
+            </div>
 
+            {/* Second Input - Candles Amount */}
+            <div>
+              <label className="block text-xs mb-1">Candles Amount</label>
+              <input
+                type="number"
+                className="bg-gray-800 border border-gray-600 p-1 rounded text-xs text-white w-full"
+                value={simN}
+                onChange={(e) => setSimN(e.target.value)} // Update state when user types
+              />
+            </div>
+
+            {/* Dropdown - Cryptocurrency Pair Selector */}
+            <div>
+              <label className="block text-xs mb-1">Select Crypto Pair</label>
+              <select
+                className="bg-gray-800 text-white p-1 rounded text-xs w-full"
+                value={selectedPair}
+                onChange={handleSelectChange}
+              >
+                <option value="">-- Choose a Pair --</option>
+                <option value="BTC/USD">BTC/USD</option>
+                <option value="ETH/USD">ETH/USD</option>
+                <option value="BTC/ETH">BTC/ETH</option>
+                <option value="BTC/USDT">BTC/USDT</option>
+                <option value="ETH/USDT">ETH/USDT</option>
+              </select>
+            </div>
           </div>
-          <div>
-            <label className="block text-xs mb-1">Candles Amount</label>
-            <input
-              type="number"
-              className="bg-gray-800 border border-gray-600 p-1 rounded text-xs text-white w-full"
-              value={simN}
-              onChange={(e) => setSimN(e.target.value)} // Update state when user types
-            />
-          </div>
-        </div>
+
         <button className="bg-gray-700 border border-gray-600 px-2 py-1 rounded text-xs mb-4">
           Select
         </button>
