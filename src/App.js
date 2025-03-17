@@ -93,13 +93,11 @@ const App = () => {
             </div>
           </div>
         )}
-        <div className="bg-gray-800 p-4 shadow-lg rounded-lg">
-          <div className="text-white"></div>
-          <div className="w-1/4 bg-gray-800 p-4 shadow-lg rounded-lg">
+
+          <div className="bg-gray-800 mt-4 shadow-lg rounded-lg">
             <BottomPanel response={response_train || { error: [], val: [] }} />
           </div>
         </div>
-      </div>
     </div>
   );
 };

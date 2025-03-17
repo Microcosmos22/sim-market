@@ -83,12 +83,24 @@ const BottomPanel = ({ response }) => {
     }
   }, [response]); // Dependency array to re-run the effect when response changes
 
-  return (
-    <div className="bg-gray-700 p-4 shadow-lg rounded-lg">
-      <h3 className="text-white"> Training Curves</h3>
-      {chartData && <Line data={chartData} options={options} />} {/* Render the Line chart */}
-    </div>
-  );
+    return (
+      <div className="bg-gray-700 mt-4 shadow-lg rounded-lg flex justify-center items-start p-4">
+        <div className="w-full">
+          <h3 className="text-white text-center mb-4">Training Curves</h3>
+          {chartData && (
+            <div className="chart-container" style={{ width: '100%', height: '500px' }}> {/* Adjusted container size */}
+              <Line
+                data={chartData}
+                options={options}
+                height={400}  // Chart height (this can be adjusted as needed)
+                width={800}   // Chart width (this can be adjusted as needed)
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    );
+
 };
 
 export default BottomPanel;
