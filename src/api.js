@@ -1,6 +1,5 @@
 // src/api.js
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-console.log("API Base url ", API_BASE_URL);
 
 export async function fetchMachines() {
     const url = `${API_BASE_URL}/machines`; // API endpoint
@@ -24,9 +23,20 @@ export async function fetchMachines() {
     }
 }
 
-export async function simulate_machines(){
+export async function simulate_machines(sim_N, machine_strs){
 
+  console.log(" Sim machines: ", machine_strs);
+  console.log(" Steps: ", sim_N);
 
+  const params = new URLSearchParams({
+      sim_N: sim_N,
+      machine_strs: machine_strs,
+  }).toString();
+
+  const url = `${API_BASE_URL}/simulate_machines?${params}`;
+  const response = await fetch(url, {method: "GET"});
+  console.log("API Call ", url);
+  return await response.json();
 }
 
 

@@ -4,9 +4,21 @@ import Tools from './Tools';
 
 export default function TraderSimulation({ machines4sim, setMachines4sim }) {
   const [activeTab, setActiveTab] = useState("machines");
-  const [filteredMachines, setFilteredMachines] = useState(machines4sim.machines); // For display
-  const [selectedCandleLength, setSelectedCandleLength] = useState(""); // Selected candle length
-  const [selectedMachines, setSelectedMachines] = useState([]); // To store selected machines
+  const [filteredMachines, setFilteredMachines] = useState([]); // For display (str)
+  const [selectedCandleLength, setSelectedCandleLength] = useState(""); // Selected candle length (string)
+  const [selectedMachinesId, setselectedMachinesId] = useState([]); // To store selected machines
+  const [selectedMachineStr, setSelectedMachineStr] = useState([]); // To store selected machines
+
+  const [simN, setSimN] = useState("");
+  const [portfolios, setPortfolios] = useState([]);
+
+  const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+
+  useEffect(() => {console.log(" Selected machines for simulation: ", selectedMachineStr)},[selectedMachineStr]);
+
+  useEffect(() => {
+    setFilteredMachines(machines4sim.machines);
+  }, []); // Empty dependency array ensures this runs only on mount
 
   // FORCE RE-RENDER OF MACHINES LIST
   function forceRenderReducer(state) {
@@ -23,44 +35,58 @@ export default function TraderSimulation({ machines4sim, setMachines4sim }) {
   const handleCandleLengthChange = (event) => {
     const selectedLen = event.target.value;
     setSelectedCandleLength(selectedLen); // Update the selected candle length
-    if (selectedLen === ""){
-      setFilteredMachines(machines4sim.machines);
-      return;
-    }
 
     // Initialize an array to hold the results
     const machineLen = machines4sim.machines.map(machine => {
       return Tools.findallsubstrings(machine, "candles", "2025", 0);  // Apply `findallsubstrings` to each string
     });
 
-    const filteredMachinsa = machines4sim.machines.map((machine, i) => {
-
-      if (machineLen[i] === selectedLen){
-        return machines4sim.machines[i]
-      }
-
-    });
-    setFilteredMachines(filteredMachinsa);
-    setSelectedMachines([]);
+    if (selectedLen === ""){ // If none selected, show all machines4sim
+      setFilteredMachines(machines4sim.machines);
+      return;
+    }else{
+      const filteredMachinsa = machines4sim.machines.filter((machine, i) => machineLen[i] === selectedLen);
+      setFilteredMachines(filteredMachinsa);
+    }
+    // Un-check all boxes
+    setselectedMachinesId([]);
   };
 
 
-  const handleCheckboxChange = (machineId) => {
+  const handleCheckboxChange = (machineId, machine) => {
 
-  setSelectedMachines((prevSelected) => {
+    setselectedMachinesId((prevSelected) => {
+      let newselection;
+      //console.log("Prev selected ", prevSelected);
+      //console.log(" clicked ", machineId)
 
-    if (prevSelected.includes(machineId)) {
-      // If the machine is already selected, uncheck it (remove from list)
-      console.log(" Selected: ", prevSelected.filter((id) => id !== machineId))
-      return prevSelected.filter((id) => id !== machineId);
-    } else {
-      // If the machine is not selected, check it (add to list)
-      console.log(" Selected: ", [...prevSelected, machineId])
-      return [...prevSelected, machineId];
-    }
+      if (prevSelected.includes(machineId)) {
+        // If the machine is already selected, uncheck it (remove from list)
+        newselection = prevSelected.filter((id) => id !== machineId);
+      } else {
+        // If the machine is not selected, check it (add to list)
+        newselection = [...prevSelected, machineId];}
 
-  });
-};
+      console.log("Selected machine IDs for sim:", newselection);
+      console.log("Filtered machines: ", filteredMachines);
+
+      setSelectedMachineStr(filteredMachines.map((mstr, i) => {
+        //console.log("machine: ", mstr);
+        if (newselection.includes(i)) {
+          return mstr;
+        }
+      }));
+
+
+      return newselection;
+    });
+  };
+
+  const handleSimulate = () => {
+    console.log(" Simulate machines ", selectedMachineStr);
+    setPortfolios(api.simulate_machines( simN, selectedMachineStr));
+
+  }
 
 
 
@@ -112,7 +138,7 @@ export default function TraderSimulation({ machines4sim, setMachines4sim }) {
                   </div>
                 </div>
 
-                <button className="bg-yellow-500 text-black font-bold py-2 px-4 rounded hover:bg-yellow-400">
+                <button onClick ={handleSimulate} className="bg-yellow-500 text-black font-bold py-2 px-4 rounded hover:bg-yellow-400">
                   Simulate Machines
                 </button>
               </div>
@@ -141,8 +167,8 @@ export default function TraderSimulation({ machines4sim, setMachines4sim }) {
                             {/* Checkbox for selecting/deselecting machine */}
                             <input
                               type="checkbox"
-                              checked={selectedMachines.includes(index)}  // Check if machineId is in selectedMachines
-                              onChange={() => handleCheckboxChange(index)}  // Handle selection change
+                              checked={selectedMachinesId.includes(index)}  // Check if machineId is in selectedMachines
+                              onChange={() => handleCheckboxChange(index, machine)}  // Handle selection change
                               className="w-4 h-4"
                             />
 
@@ -190,13 +216,17 @@ export default function TraderSimulation({ machines4sim, setMachines4sim }) {
             <input
               type="date"
               className="bg-gray-800 border border-gray-600 p-1 rounded text-xs text-white w-full"
+              defaultValue={new Date().toISOString().split('T')[0]} // Set default date
             />
+
           </div>
           <div>
             <label className="block text-xs mb-1">Candles Amount</label>
             <input
               type="number"
               className="bg-gray-800 border border-gray-600 p-1 rounded text-xs text-white w-full"
+              value={simN}
+              onChange={(e) => setSimN(e.target.value)} // Update state when user types
             />
           </div>
         </div>
