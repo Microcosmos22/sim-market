@@ -3,24 +3,30 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 console.log("API Base url ", API_BASE_URL);
 
 export async function fetchMachines() {
-    const url = `${API_BASE_URL}/machines`;
-    const response = await fetch(url, { method: "GET" });
-
-    if (!response.ok) {
-        console.error("Failed to fetch machine names. Status:", response.status);
-        throw new Error("Failed to fetch machine names");
-    }
-
-    let machineStrings;
+    const url = `${API_BASE_URL}/machines`; // API endpoint
     try {
-        machineStrings = await response.json(); // Parse the JSON response
+        const response = await fetch(url, { method: "GET" });
 
+        if (!response.ok) {
+            console.error("Failed to fetch machine data. Status:", response.status);
+            throw new Error("Failed to fetch machine data");
+        }
+
+        const data = await response.json(); // Parse response
+
+        return {
+            machines: data.machine_files || [], // Ensure array format
+            scalers: data.scaler_files || []   // Ensure array format
+        };
     } catch (error) {
-        console.error("Error parsing machine data:", error);
-        return { machines: [], scalers: [] }; // Return empty structure on error
+        console.error("Error fetching machine data:", error);
+        return { machines: [], scalers: [] }; // Return empty arrays on error
     }
+}
 
-    return { machines: machineStrings, scalers: [] }; // Ensure it's wrapped in an object with "machines"
+export async function simulate_machines(){
+
+
 }
 
 

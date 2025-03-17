@@ -4,7 +4,7 @@ import Tools from './Tools';
 
 export default function TraderSimulation({ machines4sim, setMachines4sim }) {
   const [activeTab, setActiveTab] = useState("machines");
-  const [filteredMachines, setFilteredMachines] = useState([]); // For display
+  const [filteredMachines, setFilteredMachines] = useState(machines4sim.machines); // For display
   const [selectedCandleLength, setSelectedCandleLength] = useState(""); // Selected candle length
   const [selectedMachines, setSelectedMachines] = useState([]); // To store selected machines
 
@@ -30,28 +30,24 @@ export default function TraderSimulation({ machines4sim, setMachines4sim }) {
 
     // Initialize an array to hold the results
     const machineLen = machines4sim.machines.map(machine => {
-      return Tools.findallsubstrings(machine);  // Apply `findallsubstrings` to each string
+      return Tools.findallsubstrings(machine, "candles", "2025", 0);  // Apply `findallsubstrings` to each string
     });
 
-    console.log("selected length ", selectedLen);
-    const filteredMachines = machines4sim.machines.map((machine, i) => {
-      console.log("machine length ", machineLen)
+    const filteredMachinsa = machines4sim.machines.map((machine, i) => {
 
       if (machineLen[i] === selectedLen){
         return machines4sim.machines[i]
       }
-      setFilteredMachines(filteredMachines);
+
     });
+    setFilteredMachines(filteredMachinsa);
+    setSelectedMachines([]);
   };
 
 
   const handleCheckboxChange = (machineId) => {
 
   setSelectedMachines((prevSelected) => {
-    console.log(" clicked: ", machineId)
-
-
-    console.log( "includes? ",prevSelected.includes(machineId));
 
     if (prevSelected.includes(machineId)) {
       // If the machine is already selected, uncheck it (remove from list)
@@ -93,57 +89,73 @@ export default function TraderSimulation({ machines4sim, setMachines4sim }) {
           {activeTab === "machines" && (
             <div className="p-4">
               {/* Dropdown for Candle Lengths */}
-              <label className="block mb-2 text-sm font-medium text-white">Filter machines by candle length:</label>
-              <select
-                className="bg-gray-800 text-white p-1 rounded mb-4"
-                value={selectedCandleLength}
-                onChange={handleCandleLengthChange}
-              >
-                <option value="">Show all</option>
-                <option value="1sec">1s</option>
-                <option value="15min">15m</option>
-                <option value="1hour">1h</option>
-                <option value="4hour">4h</option>
-              </select>
+              <div className="bg-gray-900 p-4 rounded-lg h-[150px] flex flex-col justify-between">
+                <div>
+                  <label className="block mb-2 text-sm font-medium text-white">
+                    Filter machines by candle length:
+                  </label>
 
-              {/* Saved Machines List */}
-              <div className="bg-gray-900 p-2 rounded text-xs max-h-[600px] overflow-x-auto overflow-y-auto">
-                {filteredMachines?.length > 0 ? (
-                  <div className="flex flex-col space-y-2">
-                    {filteredMachines
-                    .slice() // Create a copy to avoid mutating the original array
-                    .sort((a, b) => (a.name || a).localeCompare(b.name || b)) // Sort alphabetically
-                    .map((machine, index) => {
-                      const machineColor = colors[index % colors.length];
+                  <div className="flex items-center">
+                    <select
+                      className="bg-gray-800 text-white p-1 rounded mb-4 flex-1"
+                      value={selectedCandleLength}
+                      onChange={handleCandleLengthChange}
+                    >
+                      <option value="">Show all</option>
+                      <option value="1s">1sec</option>
+                      <option value="15m">15min</option>
+                      <option value="1h">1hour</option>
+                      <option value="4h">4hour</option>
+                    </select>
 
-                      return (
-                        <div
-                          key={index} // Use index as key for simplicity
-                          className={`${machineColor}
-                        } px-4 py-2 rounded flex items-center space-x-2 break-words`} // Apply color dynamically, ensure text wraps
-                        >
-                          {/* Checkbox for selecting/deselecting machine */}
-                          <input
-                            type="checkbox"
-                            checked={selectedMachines.includes(index)}  // Check if machineId is in selectedMachines
-                            onChange={() => handleCheckboxChange(index)}  // Handle selection change
-                            className="w-4 h-4"
-                          />
-
-                          {/* Machine name with wrapping for exactly 2 lines */}
-                          <div className="break-words whitespace-normal">{machine.name || machine}</div>
-                        </div>
-                      );
-                    })}
+                    <span className="text-yellow-400 text-sm ml-2">Selected: {selectedCandleLength || "None"}</span>
                   </div>
-                ) : (
-                  <div className="text-gray-500">No saved machines found.</div>
-                )}
+                </div>
+
+                <button className="bg-yellow-500 text-black font-bold py-2 px-4 rounded hover:bg-yellow-400">
+                  Simulate Machines
+                </button>
               </div>
 
 
+              {/* Saved Machines List */}
+              <div className="bg-gray-900 p-2 rounded text-xs max-h-[600px] overflow-x-auto overflow-y-auto">
+              {filteredMachines && filteredMachines.length > 0 ? (
 
-            </div>
+
+                  <div className="flex flex-col space-y-2">
+                    {filteredMachines
+                      .slice() // Create a copy to avoid mutating the original array
+                      .sort() // Sort strings alphabetically
+                      .map((machine, index) => {
+                        if (!machine) return null; // Skip any undefined items
+
+                        const machineColor = colors[index % colors.length];
+
+                        return (
+                          <div
+                            key={index} // Use index as key for simplicity
+                            className={`${machineColor}
+                            } px-4 py-2 rounded flex items-center space-x-2 break-words`} // Apply color dynamically, ensure text wraps
+                          >
+                            {/* Checkbox for selecting/deselecting machine */}
+                            <input
+                              type="checkbox"
+                              checked={selectedMachines.includes(index)}  // Check if machineId is in selectedMachines
+                              onChange={() => handleCheckboxChange(index)}  // Handle selection change
+                              className="w-4 h-4"
+                            />
+
+                            {/* Machine name with wrapping for exactly 2 lines */}
+                            <div className="break-words whitespace-normal">{machine}</div>
+                          </div>
+                        );})}
+                  </div>
+                  ) : (
+                  <div className="text-gray-500">No saved machines found.</div>
+                  )}
+              </div>
+          </div>
           )}
 
           {activeTab === "strategy" && (

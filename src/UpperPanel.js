@@ -22,7 +22,7 @@ const UpperPanel = ({chosen_data}) => {
     async function fetchData() {
       // Only proceed if chosen_data is not empty
       if (chosen_data.length > 0) {
-        console.log('Plotter fetched chosen data size:', chosen_data.length);
+        
 
         // Check if each dataset has the expected structure
         const newCandleDivs = chosen_data.map((dataset, index) => {

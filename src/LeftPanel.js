@@ -115,8 +115,6 @@ const LeftPanel = ({machines4sim, datasetStrings, setDatasetsStrings, setRespons
           ? newSelectedDatasetsStrings.map(data => Tools.findallsubstrings(data, "_candles", "_pair", 0))
           : [];
 
-          console.log("Candle substrings ", newChosenCandlesList);
-
         // Handle the case where no checkboxes are selected (newChosenCandles is empty)
         if (newChosenCandlesList.length > 0) {
 
@@ -145,11 +143,11 @@ const LeftPanel = ({machines4sim, datasetStrings, setDatasetsStrings, setRespons
 
 
    useEffect(() => {
-      console.log(`N Datasets generated: ${response_data.length}`);
+
    }, [response_data]); // Only runs when response_data changes
 
    useEffect(() => {
-      console.log('Selected Indices:', selectedIndices);
+
    }, [selectedIndices]);
 
 
